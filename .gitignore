@@ -1,0 +1,12 @@
+codegen
+/pvtol/compute_u_ccm_mex.mexw64
+/pvtol/energyGradient1_mex.mexw64
+/pvtol/RiemannEnergy1_mex.mexw64
+/pvtol/*.fig
+/pvtol/TrajOpt.mat
+/pvtol/*.mat
+/pvtol/No_dist_comp
+/pvtol/w_dist_comp_no_errBnd
+/pvtol/w_dist_comp_w_errBnd
+/pvtol/w_perfect_distModel
+/pvtol/*.asv
