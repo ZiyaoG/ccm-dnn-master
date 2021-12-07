@@ -4,7 +4,6 @@ codegen
 /pvtol/RiemannEnergy1_mex.mexw64
 /pvtol/*.fig
 /pvtol/TrajOpt.mat
-/pvtol/*.mat
 /pvtol/No_dist_comp
 /pvtol/w_dist_comp_no_errBnd
 /pvtol/w_dist_comp_w_errBnd
