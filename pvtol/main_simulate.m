@@ -21,11 +21,11 @@ else
 end
 load(file_controller);
 % start and end positions
-x0xF_config = 3; % {1,2,3}
+x0xF_config = 1; % {1,2,3}
 
 
 % ---whether to include dist. estimation and error bound in CCM control----
-controller.distEstScheme = 0;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde d$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
+controller.distEstScheme = 2;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde d$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
 controller.use_distEst_errBnd = 1; 
 controller.filter_distEst = 1;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
 
@@ -439,7 +439,7 @@ if sim_config.save_sim_rst == 1
     else
         file_name  = [file_name '.mat'];
     end
-    save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller');
+    save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller','estDistTraj');
 end
 
 
@@ -512,25 +512,6 @@ intensity = 1./(distance_to_center.^2+1);
 % --------------- using an inverse function 2 ----------------
 % intensity = 1./(sqrt(distance_to_center.^2)+1);
 end
-
-
-function jac = jacobian(prd_dist,x)
-% only works for 2x4 jacobian
-% x is 1x4
-jac = zeros(2,4);
-e = 1e-6;
-x_pt1 = [[e; -e]+x(:,1), [1;1]*x(:,2:4)];
-x_pt2 = [[1;1]*x(:,1), [e; -e]+x(:,2), [1;1]*x(:,3:4)];
-x_pt3 = [[1;1]*x(:,1:2), [e; -e]+x(:,3), [1;1]*x(:,4)];
-x_pt4 = [[1;1]*x(:,1:3), [e; -e]+x(:,4)];
-
-jac(:,1) = (prd_dist(x_pt1(1,:))-prd_dist(x_pt1(2,:)))/(2*e);    
-jac(:,2) = (prd_dist(x_pt2(1,:))-prd_dist(x_pt2(2,:)))/(2*e); 
-jac(:,3) = (prd_dist(x_pt3(1,:))-prd_dist(x_pt3(2,:)))/(2*e); 
-jac(:,4) = (prd_dist(x_pt4(1,:))-prd_dist(x_pt4(2,:)))/(2*e); 
-end
-
-
 
 % ---------------- True disturbance --------------------
 function dist_force = actual_dist_fcn(x,center,radius)
