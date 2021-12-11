@@ -35,15 +35,15 @@ dist_config.radius = 4;
 dist_config.dist_fcn = @(x) actual_dist_fcn(x,dist_config.center,dist_config.radius);
 
 % --------(learned) disturbance model, to be replaced by a NN model--------
-use_distModel_in_planning_control = 1;  % {1,0}: whether to include a (learned) disturbance model in planning and control
+use_distModel_in_planning_control = 0;  % {1,0}: whether to include a (learned) disturbance model in planning and control
 % distLearned = @(x) learned_dist_fcn(x,dist_config.center,dist_config.radius);
 % distLearned = @(x) zero_dist(x);        % Zero disturbance model
 controller.use_distModel_in_planning_control = use_distModel_in_planning_control;
 
 
 % Ziyao
-params = load('params_perfect.mat').params;
-prd_dist = @(x) -uncer_func_perfect(x,params);
+params = load('params_poor.mat').params;
+prd_dist = @(x) -uncer_func_poor(x,params);
 distLearned = @(x) learned_dist_fcn(x,prd_dist);
 % distLearned = @(x) perfect_learner(x,dist_config.center,dist_config.radius);
 
@@ -58,7 +58,7 @@ distEst_config.adapt_gain = -distEst_config.a_pred/(exp(distEst_config.a_pred*di
 % compute_est_err_bnd; 
 % 
 % set to an artificial value
-distEst_config.est_errBnd = 0.5;
+distEst_config.est_errBnd = 0.1;
 
 %  -----------------------simulation settings -----------------------------
 sim_config.replan_nom_traj = 1;     % {1,0}: whether to replan a trajectory
@@ -67,7 +67,7 @@ sim_config.include_dist = 1;        % {1,0}: whether to include the disturbance
 sim_config.save_sim_rst = 1;        % {1,0}: whether to save simulation results
 sim_config.tight_input_bnd = 1;     % {1,0}: whether to tighten the input bnd for trajectory generation
 sim_config.include_tube = 1;        % {1,0}: whether to include a safety tube when plannign the trajectories
-sim_config.step_size = 0.0002;       % step size for simulation with ode1 solver (not used when using a variable-step solver)
+sim_config.step_size = 0.0001;       % step size for simulation with ode1 solver (not used when using a variable-step solver)
 
 use_generated_code = 1;             % whether to use the generated codes for simulations: using generated codes can accelerate by at least one fold
 
@@ -148,6 +148,7 @@ else
     load(file_traj);
 end
 duration = trajGen_config.tF;   % modify the duration according to the computed trajectory
+% duration = 3;
 
 %% --------------------- show the planned traj -----------------------------
 x_nom_fcn = soln.interp.state;
@@ -425,14 +426,16 @@ if sim_config.save_sim_rst == 1
     elseif controller.distEstScheme == 0
         file_name = 'sim_ccm';
     end
+    file_name = [file_name '_T_' num2str(sim_config.step_size)];
     file_name = [file_name '_lam_' num2str(controller.lambda,2)];
     if sim_config.include_dist == 1
         file_name = [file_name '_w_dist_' num2str(w_max)];
     end
     
     if use_distModel_in_planning_control == 1
-        file_name = [file_name '_with_perfect_Adam_'];
+        file_name = [file_name '_with_poor_Adam_'];
     end
+    file_name = [file_name 'bound' num2str(distEst_config.est_errBnd)];
     file_name = [file_name '_' num2str(x0(1)) num2str(x0(2)) '_' num2str(xF(1)) num2str(xF(2))];
     if sim_config.include_obs == 1   
         file_name  = [file_name '_w_obs.mat'];
