@@ -10,24 +10,16 @@
 clear;close all;
 controller_type = 'ccm';            % {'ccm','ccm-dnn','ccm-dnn-de'} 'de' refers to disturbance estimation
 % ---------------------- load plant and controller ------------------------
-if strcmp(controller_type, 'ccm')
-    file_controller = 'ccm_0.8_plim_0.33pi.mat';           
-elseif strcmp(controller_type, 'ccm-dnn') 
-    file_controller = '.mat';
-elseif strcmp(controller_type, 'ccm-dnn-ad') 
-    file_controller = '.mat';
-else    
-    error('Please choose a controller');
-end
+file_controller = 'ccm_0.8_plim_0.33pi.mat';          
 load(file_controller);
 % start and end positions
 x0xF_config = 1; % {1,2,3}
 
 
 % ---whether to include dist. estimation and error bound in CCM control----
-controller.distEstScheme = 2;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde d$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
-controller.use_distEst_errBnd = 1; 
-controller.filter_distEst = 1;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
+controller.distEstScheme = 0;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde d$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
+controller.use_distEst_errBnd = 0; 
+controller.filter_distEst = 0;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
 
 % --------------------- actual disturbance settings -----------------------
 dist_config.center = [5,5]';
@@ -86,7 +78,7 @@ end
 % x0 = [0;0;zeros(4,1)];                    % initial state
 % xF = [10 10 0 0 0 0]';              % final state
 duration = 15;                      % (estimated) time 
-umax = 3*plant.m*plant.g;           % control limit
+umax = 1.5*plant.m*plant.g;           % control limit
 % ----- bounds for input and states for using OptimTraj to plan trajs.-----
 u_bnd = [0 0; umax umax]';
 x_bnd = [-inf -inf -state_set.p_lim -state_set.vx_lim, -state_set.vz_lim, -state_set.pd_lim;
@@ -325,12 +317,13 @@ Klp = [500*ones(5,1);200;200]; % 200 rad/s is for filtering estimated uncertaint
 tic;
 
 % ---------------- ode23 is fastest, followed by ode45 ------------------
-% [times,xuTraj] = ode23(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),[0 duration],x_xhat_u_d_0); %,ode_opts)
+OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
+[times,x_xhat_u_d_Traj] = ode23(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),[0 duration],x_xhat_u_d_0,OPTIONS); %,ode_opts)
 % -----------------------------------------------------------------------
 
 % ----------------------- ode1: fixed step ----------------------------
-times = 0:sim_config.step_size:duration;
-x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
+% times = 0:sim_config.step_size:duration;
+% x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
 % ---------------------------------------------------------------------
 
 toc;
@@ -461,10 +454,10 @@ distEst_filtered = x_xhat_u_d(end-1:end);
 
 % ----------------- update the estimation of uncertainty -----------------
 xtilde = xhat-x;
-if mod(t,distEst_config.Ts) == 0
+% if mod(t,distEst_config.Ts) == 0
     Bsigmahat = distEst_config.adapt_gain*xtilde; 
     distEst = plant.Bpinv_fcn(x)*Bsigmahat;
-end
+% end
 % ------------------------------------------------------------------------
 
 % tic;

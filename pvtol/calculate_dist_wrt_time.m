@@ -4,9 +4,9 @@ close all;
 
 % Task1: 00_810
 dt = 0.0002;
-load('sim_de_ccm_lam_0.8_w_dist_1_with_perfect_Adam__00_810_w_obs.mat')
-params = load('params_perfect.mat').params;
-prd_dist = @(x) -uncer_func_perfect(x,params);
+load('simulation_results/sim_de_ccm_3__T_0.0002_lam_0.8_w_dist_1_with_poor_Adam_bound0.1_00_810_w_obs.mat')
+params = load('params_poor.mat').params;
+prd_dist = @(x) -uncer_func_poor(x,params);
 
 dist_learned = learned_dist_fcn(xTraj, prd_dist);
 dist_true = actual_dist_fcn(xTraj, [5,5], 4);
@@ -16,7 +16,7 @@ h2 = plot(times,dist_learned(1,:),'b-.','Linewidth',1);
 h3 = plot(times,estDistTraj(1,:),'r--','Linewidth',1);
 h1 = plot(times,dist_true(1,:),'k--','Linewidth',1.5);
 
-load('sim_ccm_lam_0.8_w_dist_1_00_810_w_obs.mat')
+load('simulation_results/sim_ccm_lam_0.8_w_dist_1_00_810_w_obs.mat')
 
 dist_learned = learned_dist_fcn(xTraj, prd_dist);
 dist_true = actual_dist_fcn(xTraj, [5,5], 4);
@@ -27,14 +27,14 @@ h6 = plot(times,estDistTraj(1,:),'r-.','Linewidth',1.5);
 axis square
 xlabel('Time (s)','interpreter','latex')
 ylabel('Disturbance','interpreter','latex')
-legend([h1,h2,h3,h4,h5,h6],{'Good L: $d_1$', 'Good L: $\hat d_1$', 'Good L: $\check d_1$', 'No L: $d_1$', 'No L: $\hat d_1$', 'No L: $\check d_1$'},'NumColumns',2,'Location','southeast','Orientation','vertical','interpreter','latex');
+legend([h1,h2,h3,h4,h5,h6],{'Poor L: $d_1$', 'Poor L: $\hat d_1$', 'Poor L: $\check d_1$', 'No L: $d_1$', 'No L: $\hat d_1$', 'No L: $\check d_1$'},'NumColumns',2,'Location','southeast','Orientation','vertical','interpreter','latex');
 
 xlim([0 10.5]);
-ylim([-0.7 0.05]);
+% ylim([-0.7 0.05]);
 goodplot([6 5]);
 
 % print('With partial learning_ccm fails.pdf', '-painters', '-dpdf', '-r150');
-print('Plot disturbance.pdf', '-painters', '-dpdf', '-r150');
+print('Plot disturbance_test.pdf', '-painters', '-dpdf', '-r150');
 %% some functions
 function [dist_force, d_force_dx]= learned_dist_fcn(x,prd_dist)
 [n,N]  = size(x);

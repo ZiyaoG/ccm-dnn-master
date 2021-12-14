@@ -4,7 +4,7 @@ close all;
 figure(1);
 hold on;
 %% Task 1
-load('sim_de_ccm_lam_0.8_w_dist_1_with_better_Adam__00_810_w_obs.mat');
+load('simulation_results/sim_de_ccm_lam_0.8_w_dist_1_with_perfect_Adam__00_810_w_obs.mat');
 
 xx = -1.5:0.05:13;
 zz = 0:0.05:13;
@@ -35,11 +35,11 @@ scatter(xTraj(1,1),xTraj(2,1),'ro')
 scatter(xTraj(1,end),xTraj(2,end),'rp')
 scatter(xnomTraj(1,1),xnomTraj(2,1),'k*')
 
-load('sim_ccm_lam_0.8_w_dist_1_with_better_Adam__00_810_w_obs.mat');
+load('simulation_results/sim_ccm_lam_0.8_w_dist_1_with_perfect_Adam__00_810_w_obs.mat');
 h3 = plot(xTraj(1,:),xTraj(2,:),'b-.','Linewidth',1);
 
-%% Task 2
-load('sim_de_ccm_lam_0.8_w_dist_1_with_better_Adam__04_106_w_obs.mat');
+%% Task 3
+load('simulation_results/sim_de_ccm_lam_0.8_w_dist_1_with_perfect_Adam__04_106_w_obs.mat');
 h5 = plot(xTraj(1,:),xTraj(2,:),'r-','Linewidth',1.5);
 h4 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
 
@@ -47,11 +47,11 @@ scatter(xTraj(1,1),xTraj(2,1),'ro')
 scatter(xTraj(1,end),xTraj(2,end),'rp')
 scatter(xnomTraj(1,1),xnomTraj(2,1),'k*')
 
-load('sim_ccm_lam_0.8_w_dist_1_with_better_Adam__04_106_w_obs.mat');
+load('simulation_results/sim_ccm_lam_0.8_w_dist_1_with_perfect_Adam__04_106_w_obs.mat');
 h6 = plot(xTraj(1,:),xTraj(2,:),'b-.','Linewidth',1);
 
-%% Task 3
-load('sim_de_ccm_lam_0.8_w_dist_1_with_better_Adam__100_210_w_obs.mat');
+%% Task 2
+load('simulation_results/sim_de_ccm_lam_0.8_w_dist_1_with_perfect_Adam__100_210_w_obs.mat');
 
 h8 = plot(xTraj(1,:),xTraj(2,:),'r-','Linewidth',1.5);
 h7 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
@@ -60,7 +60,7 @@ scatter(xTraj(1,1),xTraj(2,1),'ro')
 scatter(xTraj(1,end),xTraj(2,end),'rp')
 scatter(xnomTraj(1,1),xnomTraj(2,1),'k*')
 
-load('sim_ccm_lam_0.8_w_dist_1_with_better_Adam__100_210_w_obs.mat');
+load('simulation_results/sim_ccm_lam_0.8_w_dist_1_with_perfect_Adam__100_210_w_obs.mat');
 h9 = plot(xTraj(1,:),xTraj(2,:),'b-.','Linewidth',1);
 
 axis square
@@ -119,14 +119,13 @@ axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
 % legend([h1,h2,h3,h4,h5,h6,h7,h8,h9],{'T1:Planned', 'T1:DE-CCM', 'T1:CCM', 'T2:Planned', 'T2:DE-CCM', 'T2:CCM', 'T3:Planned', 'T3:DE-CCM', 'T3:CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
-legend([h1,h2,h3],{'Planned', 'DE-CCM', 'CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
+legend([h1,h2,h3],{'Planned', 'RD-CCM', 'CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
 
 xlim([-1.5 10.5]);
 ylim([0 12]);
 goodplot([6 5]);
 
-% print('With partial learning_ccm fails.pdf', '-painters', '-dpdf', '-r150');
-print('With better learning .pdf', '-painters', '-dpdf', '-r150');
+print('With perfect learning.pdf', '-painters', '-dpdf', '-r150');
 %% functions
 function [intensity,distance_to_center] = dist_distribution(X,Z,center,radius)
 distance_to_center = sqrt((X-center(1)).^2 + (Z-center(2)).^2);
