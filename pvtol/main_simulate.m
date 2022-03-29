@@ -13,12 +13,12 @@ controller_type = 'ccm';            % {'ccm','ccm-dnn','ccm-dnn-de'} 'de' refers
 file_controller = 'ccm_0.8_plim_0.33pi.mat';          
 load(file_controller);
 % start and end positions
-x0xF_config = 1; % {1,2,3}
+x0xF_config = 8; % {1,2,3,4,5,6}
 
 
 % ---whether to include dist. estimation and error bound in CCM control----
-controller.distEstScheme = 0;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde d$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
-controller.use_distEst_errBnd = 0; 
+controller.distEstScheme = 2;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde d$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
+controller.use_distEst_errBnd = 1; 
 controller.filter_distEst = 0;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
 
 % --------------------- actual disturbance settings -----------------------
@@ -34,8 +34,8 @@ controller.use_distModel_in_planning_control = use_distModel_in_planning_control
 
 
 % Ziyao
-params = load('params_poor.mat').params;
-prd_dist = @(x) -uncer_func_poor(x,params);
+params = load('params_perfect.mat').params;
+prd_dist = @(x) -uncer_func_perfect(x,params);
 distLearned = @(x) learned_dist_fcn(x,prd_dist);
 % distLearned = @(x) perfect_learner(x,dist_config.center,dist_config.radius);
 
@@ -65,14 +65,32 @@ use_generated_code = 1;             % whether to use the generated codes for sim
 
 n = 6; nu = 2;
 if x0xF_config == 1
+        x0 = [0;0;zeros(4,1)];     % initial state
+        xF = [10 10 0 0 0 0]';      % final state
+elseif x0xF_config == 2
+        x0 = [10;0;zeros(4,1)];     % initial state
+        xF = [0 10 0 0 0 0]';      % final state
+elseif x0xF_config == 3
+        x0 = [0;2;zeros(4,1)];     % initial state
+        xF = [10 6 0 0 0 0]';      % final state
+elseif x0xF_config == 4
+        x0 = [0;6;zeros(4,1)];     % initial state
+        xF = [10 2 0 0 0 0]';      % final state
+elseif x0xF_config == 5
+        x0 = [2;10;zeros(4,1)];     % initial state
+        xF = [8 0 0 0 0 0]';      % final state
+elseif x0xF_config == 6
         x0 = [2;0;zeros(4,1)];     % initial state
         xF = [8 10 0 0 0 0]';      % final state
-elseif x0xF_config == 2
-        x0 = [8;0;zeros(4,1)];     % initial state
-        xF = [2 10 0 0 0 0]';      % final state
-elseif x0xF_config == 3
-        x0 = [0;6;zeros(4,1)];     % initial state
-        xF = [10 6 0 0 0 0]';      % final state
+elseif x0xF_config == 7
+        x0 = [0;7;zeros(4,1)];     % initial state
+        xF = [6 0 0 0 0 0]';      % final state
+elseif x0xF_config == 8
+        x0 = [4;0;zeros(4,1)];     % initial state
+        xF = [10 7 0 0 0 0]';      % final state
+elseif x0xF_config == 9
+        x0 = [0;8;zeros(4,1)];     % initial state
+        xF = [10 8 0 0 0 0]';      % final state
 end
 
 % x0 = [0;0;zeros(4,1)];                    % initial state
@@ -113,7 +131,7 @@ if sim_config.replan_nom_traj == 1
 %             6.2 5 0.8];        
     obs = [3.1 6 0.6;           
     6.9 6 0.6;
-    5 3 0.5]; %     5 3 0.5
+    5 5 0.7]; %     5 3 0.5
     trajGen_config.obs = obs;
            
     figure(1);clf;hold on;    
@@ -201,11 +219,19 @@ if x0xF_config == 1
 elseif x0xF_config == 2
         x0 = [10;0;zeros(4,1)];     % initial state
 elseif x0xF_config == 3
-        x0 = [0;4;zeros(4,1)];     % initial state
-        if controller.distEstScheme == 0  
-            % Without disturbance compensation, the actuat
-%             duration = 4;
-        end
+        x0 = [0;2;zeros(4,1)];     % initial state
+elseif x0xF_config == 4
+        x0 = [0;6;zeros(4,1)];     % initial state
+elseif x0xF_config == 5
+        x0 = [2;10;zeros(4,1)];     % initial state
+elseif x0xF_config == 6
+        x0 = [2;0;zeros(4,1)];     % initial state
+elseif x0xF_config == 7
+        x0 = [0;7;zeros(4,1)];     % initial state
+elseif x0xF_config == 8
+        x0 = [4;0;zeros(4,1)];     % initial state
+elseif x0xF_config == 9
+        x0 = [0;8;zeros(4,1)];     % initial state
 end
 
 %% Formulate the NLP problem for geodesic computation
@@ -317,13 +343,13 @@ Klp = [500*ones(5,1);200;200]; % 200 rad/s is for filtering estimated uncertaint
 tic;
 
 % ---------------- ode23 is fastest, followed by ode45 ------------------
-OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
-[times,x_xhat_u_d_Traj] = ode23(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),[0 duration],x_xhat_u_d_0,OPTIONS); %,ode_opts)
+% OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
+% [times,x_xhat_u_d_Traj] = ode23(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),[0 duration],x_xhat_u_d_0,OPTIONS); %,ode_opts)
 % -----------------------------------------------------------------------
 
 % ----------------------- ode1: fixed step ----------------------------
-% times = 0:sim_config.step_size:duration;
-% x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
+times = 0:sim_config.step_size:duration;
+x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
 % ---------------------------------------------------------------------
 
 toc;
@@ -357,7 +383,7 @@ plot(times,xnomTraj(1,:),'b--',times,xnomTraj(2,:),'r--');
 plot(times,xTraj(1,:),'b-',times,xTraj(2,:),'r-');
 xlabel('Time (s)')
 ylabel('x & z (m)')
-legend('x_{nom}', 'z_{nom}',['x: ' addText],['z: ' addText]);
+legend('x_{nom}', 'z_{nom}', ['x: ' addText],['z: ' addText]);
 
 subplot(2,2,2); hold on;
 plot(times,xnomTraj(3,:)*180/pi,'--');
@@ -409,15 +435,15 @@ scatter(xTraj(1,end),xTraj(2,end),'r*')
 axis square
 xlabel('p_x (m)')
 ylabel('p_z (m)')
-legend([h1,h2],{'Planned','Actual'});
+legend([h1,h2],{'Planned','RD-CCM'});
 xlim([-1 11]);
 ylim([-1 11]);
 w_max = 1;
 if sim_config.save_sim_rst == 1
     if controller.distEstScheme == 2    
-        file_name = 'sim_de_ccm';  
+        file_name = 'sim_RD_CCM';  
     elseif controller.distEstScheme == 0
-        file_name = 'sim_ccm';
+        file_name = 'sim_CCM';
     end
     file_name = [file_name '_T_' num2str(sim_config.step_size)];
     file_name = [file_name '_lam_' num2str(controller.lambda,2)];
@@ -426,7 +452,7 @@ if sim_config.save_sim_rst == 1
     end
     
     if use_distModel_in_planning_control == 1
-        file_name = [file_name '_with_poor_Adam_'];
+        file_name = [file_name '_with_XX_Adam_'];
     end
     file_name = [file_name 'bound' num2str(distEst_config.est_errBnd)];
     file_name = [file_name '_' num2str(x0(1)) num2str(x0(2)) '_' num2str(xF(1)) num2str(xF(2))];
@@ -449,8 +475,8 @@ end
 n = plant.n;
 x = x_xhat_u_d(1:n);
 xhat = x_xhat_u_d(n+1:2*n);
-u_e_dist_estDist_filter = x_xhat_u_d(2*n+1:end);
-distEst_filtered = x_xhat_u_d(end-1:end);
+u_e_dist_estDist_filter = x_xhat_u_d(2*n+1:2*n+7);
+distEst_filtered = x_xhat_u_d(2*n+6:2*n+7);
 
 % ----------------- update the estimation of uncertainty -----------------
 xtilde = xhat-x;
@@ -472,15 +498,16 @@ u = ue(1:end-1);
 wt = dist_config.dist_fcn(x);
 
 % ------------------- update state predictor -----------------------------
-xnomdot = plant.f_fcn(x)+plant.B_fcn(x)*u; % nominal dynamics;
+xdot = plant.f_fcn(x)+plant.B_fcn(x)*u; % nominal dynamics;
 if controller.use_distModel_in_planning_control == 1 && controller.distEstScheme == 1
-        xnomdot = xnomdot  + plant.B_fcn(x)*distLearned(x);
+        xdot = xdot  + plant.B_fcn(x)*distLearned(x);
 end
-xhatdot = xnomdot + Bsigmahat - distEst_config.a_pred*xtilde;
+xhatdot = xdot + Bsigmahat - distEst_config.a_pred*xtilde;
 % ------------------------------------------------------------------------
 
+
 % update the states of actual system, state predictor, ...
-dxdt = [plant.f_fcn(x); xhatdot; -Klp.*u_e_dist_estDist_filter]+[plant.B_fcn(x)*u; zeros(n,1); Klp.*[ue;wt;distEst]];
+dxdt = [xdot; xhatdot; -Klp.*u_e_dist_estDist_filter]+[zeros(n,1); zeros(n,1); Klp.*[ue;wt;distEst]];
 if sim_config.include_dist == 1
    dxdt(1:n,:) = dxdt(1:n,:) + plant.B_fcn(x)*wt;
 end
