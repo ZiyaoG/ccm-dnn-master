@@ -1,6 +1,6 @@
 % This file is used to save onnx file to a matlab function
-modelfile = 'uncer_model_softplus_Adam_perfect.onnx';
+modelfile = 'CDC_safe_explo_SN.onnx';
 % net = importONNXNetwork(modelfile,'OutputLayerType','regression')
-params = importONNXFunction(modelfile,'uncer_func_perfect')
+params = importONNXFunction(modelfile,'CDC_safe_explo_SN')
 
-save('params_perfect.mat','params')
+save('CDC_safe_explo_SN.mat','params')

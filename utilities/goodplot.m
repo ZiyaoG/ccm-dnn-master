@@ -48,8 +48,8 @@ for i=1:length(h)
     if ~isempty(h(1).String) && strcmp(h(i).String{1},'data1')  % indicates automatically generated legend
         set(h(i),'Visible','off');
     else 
-        set(h(i),'FontSize',fontsize-3) % 15 is default
-        h(i).ItemTokenSize = [13.4400    8.0640]*1.3; %h(i).ItemTokenSize*0.8;
+        set(h(i),'FontSize',fontsize-3.5) % 15 is default
+        h(i).ItemTokenSize = [13.4400    8.0640]*1.2; %h(i).ItemTokenSize*0.8;
     end
 end
 

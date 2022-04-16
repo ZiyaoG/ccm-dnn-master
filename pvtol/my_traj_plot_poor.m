@@ -4,7 +4,7 @@ close all;
 figure(1);
 hold on;
 %% Task 1
-load('simulation_results/sim_de_ccm_T_0.0001_lam_0.8_w_dist_1bound0.1_00_810_w_obs.mat');
+load('simulation_results/sim_de_ccm_T_0.0001_lam_0.8_w_dist_1_with_poor_Adam_bound0.1_00_810_w_obs (1).mat');
 
 xx = -1.5:0.05:13;
 zz = 0:0.05:13;
@@ -31,42 +31,42 @@ end
 h2 = plot(xTraj(1,:),xTraj(2,:),'r-','Linewidth',1.5);
 h1 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
 
-scatter(xTraj(1,1),xTraj(2,1),'ro')
-scatter(xTraj(1,end),xTraj(2,end),'rp')
-scatter(xnomTraj(1,1),xnomTraj(2,1),'k*')
+h11 = scatter(xTraj(1,1),xTraj(2,1),'ro');
+h12 = scatter(xTraj(1,end),xTraj(2,end),60,'rp');
+h13 = scatter(xnomTraj(1,1),xnomTraj(2,1),'k*');
 
-load('simulation_results/sim_ccm_lam_0.8_w_dist_1_00_810_w_obs.mat');
+load('simulation_results/sim_ccm_T_0.0001_lam_0.8_w_dist_1_with_poor_Adam_bound0.1_00_810_w_obs.mat');
 h3 = plot(xTraj(1,:),xTraj(2,:),'b-.','Linewidth',1);
 
 %% Task 3
-load('simulation_results/sim_de_ccm_T_0.0001_lam_0.8_w_dist_1bound0.1_04_106_w_obs.mat');
+load('simulation_results/sim_de_ccm_lam_0.8_w_dist_1_with_poor_Adam__04_106_w_obs.mat');
 h5 = plot(xTraj(1,:),xTraj(2,:),'r-','Linewidth',1.5);
 h4 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
 
 scatter(xTraj(1,1),xTraj(2,1),'ro')
-scatter(xTraj(1,end),xTraj(2,end),'rp')
+scatter(xTraj(1,end),xTraj(2,end),60,'rp')
 scatter(xnomTraj(1,1),xnomTraj(2,1),'k*')
 
-load('simulation_results/sim_ccm_lam_0.8_w_dist_1_04_106_w_obs.mat');
+load('simulation_results/sim_ccm_lam_0.8_w_dist_1_with_poor_Adam__04_106_w_obs.mat');
 h6 = plot(xTraj(1,:),xTraj(2,:),'b-.','Linewidth',1);
 
 %% Task 2
-load('simulation_results/sim_de_ccm_lam_0.8_w_dist_1_100_210_w_obs.mat');
+load('simulation_results/sim_de_ccm_T_0.0001_lam_0.8_w_dist_1_with_poor_Adam_bound0.1_100_210_w_obs.mat');
 
 h8 = plot(xTraj(1,:),xTraj(2,:),'r-','Linewidth',1.5);
 h7 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
 
 scatter(xTraj(1,1),xTraj(2,1),'ro')
-scatter(xTraj(1,end),xTraj(2,end),'rp')
+scatter(xTraj(1,end),xTraj(2,end),60,'rp')
 scatter(xnomTraj(1,1),xnomTraj(2,1),'k*')
 
-load('simulation_results/sim_ccm_lam_0.8_w_dist_1_100_210_w_obs.mat');
+load('simulation_results/sim_ccm_lam_0.8_w_dist_1_with_poor_Adam__100_210_w_obs.mat');
 h9 = plot(xTraj(1,:),xTraj(2,:),'b-.','Linewidth',1);
 
 axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
-goodplot([6 5]);
+goodplot([5 5]);
 %% plot the trajactory with nn
 
 % figure(2);
@@ -119,13 +119,13 @@ axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
 % legend([h1,h2,h3,h4,h5,h6,h7,h8,h9],{'T1:Planned', 'T1:DE-CCM', 'T1:CCM', 'T2:Planned', 'T2:DE-CCM', 'T2:CCM', 'T3:Planned', 'T3:DE-CCM', 'T3:CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
-legend([h1,h2,h3],{'Planned', 'RD-CCM', 'CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
+legend([h1,h2,h3,h11,h12,h13],{'Planned', 'DE-CCM', 'CCM', '$x$ start', '$x$ end','$x^*$ start'},'NumColumns',3,'Location','North','Orientation','horizontal','interpreter','latex');
 
 xlim([-1.5 10.5]);
 ylim([0 12]);
-goodplot([6 5]);
+goodplot([5 5]);
 
-print('With no learning.pdf', '-painters', '-dpdf', '-r150');
+print('CDC_figure/With poor learning_DE.pdf', '-painters', '-dpdf', '-r150');
 %% functions
 function [intensity,distance_to_center] = dist_distribution(X,Z,center,radius)
 distance_to_center = sqrt((X-center(1)).^2 + (Z-center(2)).^2);
