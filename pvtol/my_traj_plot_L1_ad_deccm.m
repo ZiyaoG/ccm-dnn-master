@@ -4,7 +4,7 @@ close all;
 figure(1);
 hold on;
 %% Task 1
-load('L1_ad_deccm/1e_4/CDC_RD_CCM_T_0.0001_lam_0.8_w_dist_1bound0.1_00_810_w_obs.mat');
+load('dtx_DECCM_ode1_filter_bound_00_810.mat');
 
 xx = -1.5:0.05:13;
 zz = 0:0.05:13;
@@ -36,15 +36,15 @@ h1 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
 % h13 = scatter(xnomTraj(1,1),xnomTraj(2,1),'k*');
 
 
-%% Task 3
-load('L1_ad_deccm/1e_4/sim_ad_ccm_T_0.0001_lam_0.8_w_dist_1_00_810_w_obs.mat');
+%% Task 2
+load('dtx_adaptiveCCM_ode1.mat');
 h5 = plot(xTraj(1,:),xTraj(2,:),'c-.','Linewidth',1.5);
 
 
-%% Task 2
-load('L1_ad_deccm/1e_4/sim_L1_CCM_fixed_T_0.0001_lam_0.8_w_dist_1bound0.1_00_810_w_obs.mat');
-
-h8 = plot(xTraj(1,:),xTraj(2,:),'b.','Linewidth',1.5);
+% %% Task 3
+% load('L1_ad_deccm/1e_4/sim_L1_CCM_fixed_T_0.0001_lam_0.8_w_dist_1bound0.1_00_810_w_obs.mat');
+% 
+% h8 = plot(xTraj(1,:),xTraj(2,:),'b.','Linewidth',1.5);
 
 %% plot the trajactory with nn
 
@@ -97,7 +97,7 @@ axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
 % legend([h1,h2,h3,h4,h5,h6,h7,h8,h9],{'T1:Planned', 'T1:DE-CCM', 'T1:CCM', 'T2:Planned', 'T2:DE-CCM', 'T2:CCM', 'T3:Planned', 'T3:DE-CCM', 'T3:CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
-legend([h1,h2,h5,h8],{'Planned', 'DE-CCM', 'ad-CCM', 'L1-ccm'},'NumColumns',4,'Location','North','Orientation','horizontal','interpreter','latex');
+legend([h1,h2,h5],{'Planned', 'DE-CCM', 'ad-CCM', 'L1-ccm'},'NumColumns',4,'Location','North','Orientation','horizontal','interpreter','latex');
 
 xlim([-1.5 10.5]);
 ylim([0 12]);

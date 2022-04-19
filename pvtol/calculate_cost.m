@@ -4,7 +4,7 @@ close all;
 % Task1: 00_810 179.0226
 % Task2: 100_210 190.7433
 % Task3: 04_106 181.6375
-load('simulation_results_CDC/safe_exploration/CDC_RD_CCM_T_0.0001_lam_0.8_w_dist_1_with_XX_Adam_bound0.1_100_210_w_obs.mat')
+load('USMALL_DECCM_fake_estimation_for_ode23_filter.mat');
 
 dt = sim_config.step_size;
 u_size = size(uTraj);
@@ -16,7 +16,8 @@ for i = 1:u_size(2)
 end
 cost = cost + 5*u_size(2)*dt;
 disp(cost)
-% return
+return
+% deccm 
 %% results
 % y = [188.1646 185.6320 189.0798; 192.4614 206.9460 180.8110; 179.0226 190.7433 181.6375
 % ; 178.6475 182.9514 173.2881];

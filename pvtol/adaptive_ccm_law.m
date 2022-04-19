@@ -1,6 +1,6 @@
 
 
-function [ue,thetahat_dot]= adaptive_ccm_law(t,x,plant,controller,thetahat)
+function [ue,thetahat_dot]= adaptive_ccm_law(t,x,plant,controller,thetahat,dist_config)
 persistent t_pre beq_pre copt_pre Erem_pre
 
 if isempty(t_pre) || (t == 0 && t_pre ~=0)
@@ -131,7 +131,7 @@ else
     u_ccm = u_nom - phi0*phi1'/tmp;
 end
 if controller.adaptive_comp == 1
-    phi_x = plant.phi(x);
+    phi_x = plant.phi(t,x);
     u = u_ccm + controller.adaptive_comp*phi_x'*thetahat;
     thetahat_dot = -controller.adaptation_gain*(phi_x*phi1');
 else
@@ -140,6 +140,7 @@ else
 end
 
 ue = [u;Erem];
+% ue = [u;thetahat_dot];
 if (t-t_pre>= 0.4) && mod(t,1)< 0.1
     fprintf('t = %.1f s\n',t);
     t_pre = t;

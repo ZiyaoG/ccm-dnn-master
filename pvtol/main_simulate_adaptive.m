@@ -13,17 +13,25 @@ addpath('../utilities/');
 % ---------------------- load plant and controller ------------------------
 file_controller = 'ccm_0.8_plim_0.33pi.mat';  
 load(file_controller);
-plant.phi = @(x) [x(4)^2;x(5)^2]*[1 1];
-
-%% adaptive control setting
-controller.adaptive_comp = 1;       %{0,1} whether to add adaptive_comp 
-controller.adaptation_gain = diag([10 10]);
 
 % start and end positions
 x0xF_config = 1; % {1,2,3}
+dist_config.center = [4,4]';
+dist_config.radius = 4;
+
+% plant.phi = @(t,x) [x(4)^2;x(5)^2]*[1 1];
+% plant.phi = @(t,x) 1/((x(1)-dist_config.center(1))^2+(x(2)-dist_config.center(2))^2+1)*(x(4)^2+x(5)^2)/2*[1 0;0 1]*[sin(2*t) 0; 0 cos(2*t)]; 
+plant.phi = @(t,x) 0.3*(x(4)^2+x(5)^2)/2*[1 0;0 1]*[-1+0.3*sin(2*t) 0; 0 -1+0.3*cos(2*t)];
+
+%% adaptive control setting
+controller.adaptive_comp = 1;       %{0,1} whether to add adaptive_comp 
+controller.adaptation_gain = diag([100 100]);
 
 % --------------------- actual disturbance settings -----------------------
-dist_config.dist_fcn = @(x) (x(4)^2+x(5)^2)*[0.1;0.1];
+% dist_config.dist_fcn = @(x) (x(4)^2+x(5)^2)*[0.1;0.1];
+% dist_config.dist_fcn = @(t,x) actual_dist_fcn(t,x,dist_config.center,dist_config.radius);
+dist_config.dist_fcn = @(t,x) actual_dist_fcn(t,x,dist_config.center,dist_config.radius);
+
 
 % --------(learned) disturbance model, to be replaced by a NN model--------
 use_distModel_in_planning_control = 0;  % {1,0}: whether to include a (learned) disturbance model in planning and control
@@ -45,7 +53,7 @@ use_generated_code = 1;             % whether to use the generated codes for sim
 n = 6; nu = 2;
 if x0xF_config == 1
         x0 = [2;0;zeros(4,1)];     % initial state
-        xF = [8 10 0 0 0 0]';      % final state
+        xF = [8 8 0 0 0 0]';      % final state
 elseif x0xF_config == 2
         x0 = [8;0;zeros(4,1)];     % initial state
         xF = [2 10 0 0 0 0]';      % final state
@@ -171,7 +179,7 @@ thetahat0 = [0;0];
 
 % --------for additionally outputing control inputs and Reim. energy-------
 % compute the initial Riemann energy function value
-[ue0,thetahat_dot0] = adaptive_ccm_law(0,x0,plant,controller,thetahat0);
+[ue0,thetahat_dot0] = adaptive_ccm_law(0,x0,plant,controller,thetahat0,dist_config);
 tic;
 
 %% manual simulation
@@ -209,12 +217,13 @@ tic;
 x_u_e_thetahat0 = [x0;controller.u_nom_fcn(0);ue0(end);[0;0]]; % state, input, energy,estimated paras; (,estimated disturbance);
 Klp = [500*ones(3,1)];  
 %ode23 is fastest, followed by ode45 
-% OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
-% [tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
+OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
+[tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
 % 
 % ----------------------- ode1: fixed step ----------------------------
-times = 0:sim_config.step_size:duration;
-x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
+% duration = 6;
+% times = 0:sim_config.step_size:duration;
+% x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
 % ---------------------------------------------------------------------
 x_u_e_thetahat_Traj = x_u_e_thetahat_Traj';
 xTraj = x_u_e_thetahat_Traj(1:n,:);
@@ -230,18 +239,18 @@ plot_and_save
 
 %% some functions
                   
-function dstate_dt = pvtol_dyn2(t,state,u,thetahat_dot,plant,sim_config,dist_config)
-n = plant.n;
-x = state(1:n);
-% thetahat = x_thetahat(n+1:end);
-
-wt = dist_config.dist_fcn(x);
-
-dstate_dt = [plant.f_fcn(x);thetahat_dot]+[plant.B_fcn(x)*u;[0;0]];
-if sim_config.include_dist == 1
-   dstate_dt(1:n,:) = dstate_dt(1:n,:) + plant.B_fcn(x)*wt;
-end
-end
+% function dstate_dt = pvtol_dyn2(t,state,u,thetahat_dot,plant,sim_config,dist_config)
+% n = plant.n;
+% x = state(1:n);
+% % thetahat = x_thetahat(n+1:end);
+% 
+% wt = dist_config.dist_fcn(x);
+% 
+% dstate_dt = [plant.f_fcn(x);thetahat_dot]+[plant.B_fcn(x)*u;[0;0]];
+% if sim_config.include_dist == 1
+%    dstate_dt(1:n,:) = dstate_dt(1:n,:) + plant.B_fcn(x)*wt;
+% end
+% end
 
 function dstate = pvtol_dyn(t,x_u_e_thetahat,Klp,plant,controller,sim_config,dist_config)
 n = plant.n;
@@ -252,7 +261,7 @@ thetahat = x_u_e_thetahat(n+4:n+5);
 [ue,thetahat_dot]= adaptive_ccm_law(t,x,plant,controller,thetahat);
 
 u = ue(1:end-1); 
-wt = dist_config.dist_fcn(x);
+wt = dist_config.dist_fcn(t,x);
 
 % update the states of actual system, state predictor, ...
 dstate = [plant.f_fcn(x); -Klp.*u_e;thetahat_dot]+[plant.B_fcn(x)*u; Klp.*ue;[0;0]];
@@ -285,14 +294,15 @@ intensity = 1./(distance_to_center.^2+1);
 end
 
 % ---------------- True disturbance --------------------
-function dist_force = actual_dist_fcn(x,center,radius)
+function dist_force = actual_dist_fcn(t,x,center,radius)
 % compute the disturbance force given x
 % x is a n by m matrix, where each column represents a state vector value 
 max_damping = 0.5;
 
-[dist_intensity,~] = dist_distribution(x(1,:),x(2,:),center,radius);
+% [dist_intensity,~] = dist_distribution(x(1,:),x(2,:),center,radius);
+dist_intensity = 0.3;
 dist_force_max = (x(4,:)^2+x(5,:)^2)*max_damping;
-dist_force = [-1; -1]*(dist_intensity.*dist_force_max); %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% changed %%%%%%%%%%%%%%
+dist_force = [-1+0.3*sin(2*t); -1+0.3*cos(2*t)]*(dist_intensity.*dist_force_max); %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% changed %%%%%%%%%%%%%%
 % dist_force = -1./(1+exp(-5*phi))*0.1*(x(4)^2+x(5)^2);
 end
 
@@ -368,30 +378,6 @@ jac(:,4) = temp(:);
 
 jac = permute(reshape(jac,2,N,4),[1,3,2]);
 end
-
-function [dist_force, d_force_dx]= perfect_learner(x,center,radius)
-% compute the disturbance force given x
-% x is a n by m matrix, where each column represents a state vector value 
-max_damping = 0.5;
-[dist_intensity,distance_to_center] = dist_distribution(x(1,:),x(2,:),center,radius);
-dist_force_max = (x(4,:).^2+x(5,:).^2)*max_damping;
-dist_force = [-0.8;-1]*(dist_intensity.*dist_force_max); 
-
-if nargout>1
-    [n,N]  = size(x);
-    d_force_dx = zeros(2,n,N);    
-    for i = 1:N        
-        % ------- using an inverse function: inversely proportional to squared distance ------------
-        d_force_dx(:,1:2,i) = [-1;-1]*(-2/(distance_to_center(i)^2+1)^2*dist_force_max(i)*(x(1:2,i)-center)');
-        d_force_dx(:,4:5,i) = [-1;-1]*(dist_intensity(i)*2*max_damping*x(4:5,i)');
-        
-        % ---------------- using an inverse function 2: inversely proportional to distance-----------
-%         d_force_dx(:,1:2,i) = [-1;-1]*(-1/(distance_to_center(i)+1)^2/distance_to_center(i)*dist_force_max(i)*(x(1:2,i)-center)');
-%         d_force_dx(:,4:5,i) = [-1;-1]*(dist_intensity(i)*2*max_damping*x(4:5,i)');
-    end
-end
-end
-
 
 function [dist_force, d_force_dx]= zero_dist(x)
 [n,N]  = size(x);

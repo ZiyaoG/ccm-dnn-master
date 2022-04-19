@@ -16,13 +16,13 @@ h2 = plot(times,dist_learned(1,:),'b-.','Linewidth',1);
 h3 = plot(times,estDistTraj(1,:),'r--','Linewidth',1);
 h1 = plot(times,dist_true(1,:),'k--','Linewidth',1.5);
 
-load('simulation_results/sim_ccm_lam_0.8_w_dist_1_00_810_w_obs.mat')
-
-dist_learned = learned_dist_fcn(xTraj, prd_dist);
-dist_true = actual_dist_fcn(xTraj, [5,5], 4);
-h4 = plot(times,dist_true(1,:),'k-','Linewidth',1);
-h5 = plot(times,0*times,'b-','Linewidth',1);
-h6 = plot(times,estDistTraj(1,:),'r-.','Linewidth',1.5);
+% load('simulation_results/sim_ccm_lam_0.8_w_dist_1_00_810_w_obs.mat')
+% 
+% dist_learned = learned_dist_fcn(xTraj, prd_dist);
+% dist_true = actual_dist_fcn(xTraj, [5,5], 4);
+% h4 = plot(times,dist_true(1,:),'k-','Linewidth',1);
+% h5 = plot(times,0*times,'b-','Linewidth',1);
+% h6 = plot(times,estDistTraj(1,:),'r-.','Linewidth',1.5);
 
 axis square
 xlabel('Time (s)','interpreter','latex')

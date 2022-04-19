@@ -119,12 +119,12 @@ end
 
 if controller.use_distModel_in_planning_control == 0
     % without learned dynamics
-%     phi0 = gamma_s1_Mx*(plant_fx + plant.B*u_nom) - ...
-%     gamma_s0_Mxnom*(plant.f_fcn(x_nom) + plant.B*u_nom) + ...
-%     controller.lambda*Erem;
-    phi0 = gamma_s1_Mx*(plant_fx) - ...
+    phi0 = gamma_s1_Mx*(plant_fx + plant.B*u_nom) - ...
     gamma_s0_Mxnom*(plant.f_fcn(x_nom) + plant.B*u_nom) + ...
     controller.lambda*Erem;
+%     phi0 = gamma_s1_Mx*(plant_fx) - ...
+%     gamma_s0_Mxnom*(plant.f_fcn(x_nom) + plant.B*u_nom) + ...
+%     controller.lambda*Erem;
 else
     % with learned dynamics
 %     phi0 = gamma_s1_Mx*(plant_fx + plant.B*(u_nom+distLearned(x))) - ...
@@ -137,12 +137,12 @@ else
     elseif controller.distEstScheme == 2 
         utmp = u_nom;
     end
-%     phi0 = gamma_s1_Mx*(plant_fx + plant.B*utmp) - ...
-%     gamma_s0_Mxnom*(plant.f_fcn(x_nom) + plant.B*(u_nom+distLearned(x_nom))) + ...
-%     controller.lambda*Erem; 
-    phi0 = gamma_s1_Mx*(plant_fx) - ...
+    phi0 = gamma_s1_Mx*(plant_fx + plant.B*utmp) - ...
     gamma_s0_Mxnom*(plant.f_fcn(x_nom) + plant.B*(u_nom+distLearned(x_nom))) + ...
     controller.lambda*Erem; 
+%     phi0 = gamma_s1_Mx*(plant_fx) - ...
+%     gamma_s0_Mxnom*(plant.f_fcn(x_nom) + plant.B*(u_nom+distLearned(x_nom))) + ...
+%     controller.lambda*Erem; 
   % --------------------------------------------------
 end
 if controller.distEstScheme ~= 0
@@ -151,19 +151,19 @@ if controller.distEstScheme ~= 0
         phi0 = phi0 + norm(gamma_s1_Mx*plant.B)*distEst_errBnd; 
     end
 end
-% if phi0 <=0
-%     u = u_nom;
-% else
-%     phi1 = gamma_s1_Mx*plant.B;
-%     u = u_nom - phi0*phi1'/(phi1*phi1'+1e-12);
-% end
-
 if phi0 <=0
-    u = [0;0];
+    u = u_nom;
 else
     phi1 = gamma_s1_Mx*plant.B;
-    u = [0;0] - phi0*phi1'/(phi1*phi1'+1e-12);
+    u = u_nom - phi0*phi1'/(phi1*phi1'+1e-12);
 end
+
+% if phi0 <=0
+%     u = [0;0];
+% else
+%     phi1 = gamma_s1_Mx*plant.B;
+%     u = [0;0] - phi0*phi1'/(phi1*phi1'+1e-12);
+% end
 
 ue = [u;Erem];
 if (t-t_pre>= 0.4) && mod(t,1)< 0.1

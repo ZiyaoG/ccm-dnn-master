@@ -4,7 +4,7 @@ close all;
 figure(1);
 hold on;
 %% Task 1
-load('_L1CCM_fake_estimation_for_ode1.mat');
+load('USMALL_DECCM_fake_estimation_for_ode23_filter.mat');
 
 xx = -1.5:0.05:13;
 zz = 0:0.05:13;
@@ -35,18 +35,21 @@ h11 = scatter(xTraj(1,1),xTraj(2,1),'ro');
 h12 = scatter(xTraj(1,end),xTraj(2,end),60,'rp');
 h13 = scatter(xnomTraj(1,1),xnomTraj(2,1),'k*');
 
-load('_DECCM_fake_estimation_for_ode23_filter.mat');
+load('L1CCM_fake_estimation_for_ode23.mat');
 h3 = plot(xTraj(1,:),xTraj(2,:),'b-.','Linewidth',1);
+
+load('DECCM_fake_estimation_for_ode23_filter.mat');
+h4 = plot(xTraj(1,:),xTraj(2,:),'r--','Linewidth',1);
 
 %%
 axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
 % legend([h1,h2,h3,h4,h5,h6,h7,h8,h9],{'T1:Planned', 'T1:DE-CCM', 'T1:CCM', 'T2:Planned', 'T2:DE-CCM', 'T2:CCM', 'T3:Planned', 'T3:DE-CCM', 'T3:CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
-legend([h1,h2,h3,h11,h12,h13],{'Planned', 'L1', 'DECCM', '$x$ start', '$x$ end','$x^*$ start'},'NumColumns',3,'Location','North','Orientation','horizontal','interpreter','latex');
+legend([h1,h2,h3,h4,h11,h12],{'Planned', 'DECCM min u', 'L1', 'DECCM min u-u^*', '$x$ start', '$x$ end'},'NumColumns',3,'Location','North','Orientation','horizontal','interpreter','latex');
 
 xlim([-1.5 10.5]);
-ylim([0 12]);
+ylim([-0.5 11.5]);
 goodplot([5 5]);
 
 % print('CDC_figure/With no learning_DE.pdf', '-painters', '-dpdf', '-r150');
