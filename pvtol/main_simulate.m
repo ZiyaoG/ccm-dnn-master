@@ -50,7 +50,7 @@ distEst_config.adapt_gain = -distEst_config.a_pred/(exp(distEst_config.a_pred*di
 % compute_est_err_bnd; 
 % 
 % set to an artificial value
-distEst_config.est_errBnd = 0.1;
+distEst_config.est_errBnd = 1.38;
 
 %  -----------------------simulation settings -----------------------------
 sim_config.replan_nom_traj = 0;     % {1,0}: whether to replan a trajectory
@@ -344,20 +344,20 @@ dist0 = norm(x0);
 % ode_opts = odeset('MaxStep',5e-1);
 % --------for additionally outputing control inputs and Reim. energy-------
 % compute the initial Riemann energy function value
-ue = ccm_law(0,x0,plant,controller,distLearned,[0 0]',distEst_config.est_errBnd);
+ue = robust_ccm_law(0,x0,plant,controller,distLearned,[0 0]',distEst_config.est_errBnd);
 x_xhat_u_d_0 = [x0;x0;controller.u_nom_fcn(0);ue(end);[0;0];[0;0]]; % state, input, energy, true disturance,estimated disturbance;
 Klp = [500*ones(5,1);100;100]; % 200 rad/s is for filtering estimated uncertainties. 
 tic;
 
 % ---------------- ode23 is fastest, followed by ode45 ------------------
-OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
-[times,x_xhat_u_d_Traj] = ode23(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),[0 duration],x_xhat_u_d_0,OPTIONS); %,ode_opts)
+% OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
+% [times,x_xhat_u_d_Traj] = ode23(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),[0 duration],x_xhat_u_d_0,OPTIONS); %,ode_opts)
 % -----------------------------------------------------------------------
 
 % ----------------------- ode1: fixed step ----------------------------
 % duration=1;
-% times = 0:sim_config.step_size:duration;
-% x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
+times = 0:sim_config.step_size:duration;
+x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
 % ---------------------------------------------------------------------
 
 toc;
@@ -474,7 +474,7 @@ w_max = 1;
 
 %%
 if sim_config.save_sim_rst == 1
-    file_name = ['_dtx_DECCM_ode23_constantintensity_03_03'];
+    file_name = ['robust_CCM_ode23_constantintensity_03_03'];
     file_name = [file_name '_' num2str(x0(1)) num2str(x0(2)) '_' num2str(xF(1)) num2str(xF(2))];
     save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller','estDistTraj');
 end
@@ -494,17 +494,17 @@ u_e_dist_estDist_filter = x_xhat_u_d(2*n+1:2*n+7);
 distEst_filtered = x_xhat_u_d(2*n+6:2*n+7);
 
 % ----------------- update the estimation of uncertainty -----------------
-% xtilde = xhat-x;
-% if mod(t,distEst_config.Ts) == 0
-%     Bsigmahat = distEst_config.adapt_gain*xtilde; 
-%     distEst = plant.Bpinv_fcn(x)*Bsigmahat;
-% end
+xtilde = xhat-x;
+if mod(t,distEst_config.Ts) == 0
+    Bsigmahat = distEst_config.adapt_gain*xtilde; 
+    distEst = plant.Bpinv_fcn(x)*Bsigmahat;
+end
 % ------------------------------------------------------------------------
 
 % ----------------- use variable step -----------------
-xtilde = xhat-x;
-distEst = 0.92*dist_config.dist_fcn(t,x);
-Bsigmahat = plant.B_fcn(x)*distEst;
+% xtilde = xhat-x;
+% distEst = 0.92*dist_config.dist_fcn(t,x);
+% Bsigmahat = plant.B_fcn(x)*distEst;
 % ------------------------------------------------------------------------
 
 % tic;
@@ -513,7 +513,7 @@ if controller.filter_distEst == 1
 else
     distEst_ccm_control = distEst;
 end
-ue = ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
+ue = robust_ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
 % toc;
 u = ue(1:end-1); 
 wt = dist_config.dist_fcn(t,x);

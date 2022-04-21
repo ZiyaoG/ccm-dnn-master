@@ -20,12 +20,12 @@ dist_config.center = [4,4]';
 dist_config.radius = 4;
 
 % plant.phi = @(t,x) [x(4)^2;x(5)^2]*[1 1];
-% plant.phi = @(t,x) 1/((x(1)-dist_config.center(1))^2+(x(2)-dist_config.center(2))^2+1)*(x(4)^2+x(5)^2)/2*[1 0;0 1]*[sin(2*t) 0; 0 cos(2*t)]; 
-plant.phi = @(t,x) 0.3*(x(4)^2+x(5)^2)/2*[1 0;0 1]*[-1+0.3*sin(2*t) 0; 0 -1+0.3*cos(2*t)];
+% plant.phi = @(t,x) 0.3*(x(4)^2+x(5)^2)/2*[-1+0.3*sin(2*t) 0; 0 -1+0.3*cos(2*t)];
+plant.phi = @(t,x) 0.15*[x(4)^2*(-1+0.3*sin(2*t)) x(5)^2*(-1+0.3*sin(2*t)); x(4)^2*(-1+0.3*cos(2*t)) x(5)^2*(-1+0.3*cos(2*t))];
 
 %% adaptive control setting
 controller.adaptive_comp = 1;       %{0,1} whether to add adaptive_comp 
-controller.adaptation_gain = diag([100 100]);
+controller.adaptation_gain = 10*diag([1 1]);
 
 % --------------------- actual disturbance settings -----------------------
 % dist_config.dist_fcn = @(x) (x(4)^2+x(5)^2)*[0.1;0.1];
@@ -217,13 +217,13 @@ tic;
 x_u_e_thetahat0 = [x0;controller.u_nom_fcn(0);ue0(end);[0;0]]; % state, input, energy,estimated paras; (,estimated disturbance);
 Klp = [500*ones(3,1)];  
 %ode23 is fastest, followed by ode45 
-OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
-[tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
+% OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
+% [tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
 % 
 % ----------------------- ode1: fixed step ----------------------------
 % duration = 6;
-% times = 0:sim_config.step_size:duration;
-% x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
+times = 0:sim_config.step_size:duration;
+x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
 % ---------------------------------------------------------------------
 x_u_e_thetahat_Traj = x_u_e_thetahat_Traj';
 xTraj = x_u_e_thetahat_Traj(1:n,:);
@@ -295,15 +295,7 @@ end
 
 % ---------------- True disturbance --------------------
 function dist_force = actual_dist_fcn(t,x,center,radius)
-% compute the disturbance force given x
-% x is a n by m matrix, where each column represents a state vector value 
-max_damping = 0.5;
-
-% [dist_intensity,~] = dist_distribution(x(1,:),x(2,:),center,radius);
-dist_intensity = 0.3;
-dist_force_max = (x(4,:)^2+x(5,:)^2)*max_damping;
-dist_force = [-1+0.3*sin(2*t); -1+0.3*cos(2*t)]*(dist_intensity.*dist_force_max); %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% changed %%%%%%%%%%%%%%
-% dist_force = -1./(1+exp(-5*phi))*0.1*(x(4)^2+x(5)^2);
+dist_force = [x(4)^2*(-1+0.3*sin(2*t)) x(5)^2*(-1+0.3*sin(2*t)); x(4)^2*(-1+0.3*cos(2*t)) x(5)^2*(-1+0.3*cos(2*t))]*[0.15;0.15]; 
 end
 
 %-------------learned disturbance model--------------------

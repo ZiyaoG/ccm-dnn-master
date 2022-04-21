@@ -72,4 +72,4 @@ goodplot([5 5]);
 % axis tight
 
 
-print('theSwedenWorkshop/Renergy_deccm_ad_ccm.pdf', '-painters', '-dpdf', '-r150');
+% print('theSwedenWorkshop/Renergy_deccm_ad_ccm.pdf', '-painters', '-dpdf', '-r150');
