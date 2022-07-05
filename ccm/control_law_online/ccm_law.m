@@ -64,7 +64,7 @@ else
         geodesic.nlprob.beq = beq;
         geodesic.nlprob.x0 = c0;
 %         tic;
-        [copt,Erem,exitflag,info] = fmincon(geodesic.nlprob);
+        [copt,Erem,exitflag,~] = fmincon(geodesic.nlprob);
 %         toc;
         if exitflag<0
             disp('geodesic optimization problem failed!');
@@ -110,7 +110,6 @@ gamma_s0_Mxnom = gamma_s(:,1)'/controller.W_fcn(x_nom);
 end
 % tic;
 plant_fx = plant.f_fcn(x);
-plant_fx_nom =  plant.f_fcn(x_nom);
 
 if controller.ccm_law_form == CtrlDesignOpts.ccm_integration && controller.ccm_mat_ineq_form == ...
     CtrlDesignOpts.ccm_mat_ineq_use_rho
@@ -155,7 +154,7 @@ if phi0 <=0
     u = u_nom;
 else
     phi1 = gamma_s1_Mx*plant.B;
-    u = u_nom - phi0*phi1'/(phi1*phi1'+1e-12);
+    u = u_nom - phi0*phi1'/(phi1*phi1'+1e-8);
 end
 
 % if phi0 <=0

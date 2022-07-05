@@ -25,7 +25,7 @@ plant.phi = @(t,x) 0.15*[x(4)^2*(-1+0.3*sin(2*t)) x(5)^2*(-1+0.3*sin(2*t)); x(4)
 
 %% adaptive control setting
 controller.adaptive_comp = 1;       %{0,1} whether to add adaptive_comp 
-controller.adaptation_gain = 10*diag([1 1]);
+controller.adaptation_gain = 100*diag([1 1]);
 
 % --------------------- actual disturbance settings -----------------------
 % dist_config.dist_fcn = @(x) (x(4)^2+x(5)^2)*[0.1;0.1];
@@ -157,7 +157,7 @@ end
 % -------------------------------------------------------------------------
 
 % ----------for using matlab fmincon solver--------------------------------
-opts_opti = optiset('solver','matlab','maxiter',500,'tolrfun',1e-4,'tolafun',1e-4,'display','off','derivCheck','off'); 
+opts_opti = optiset('solver','matlab','maxiter',500,'tolrfun',5e-6,'tolafun',5e-6,'display','off','derivCheck','off'); 
 Opt = opti('fun',costf,'grad',grad,'eq',Aeq,beq,'bounds',lb,ub,'ndec',ndec,'x0',c0,'options',opts_opti);
 geodesic.nlprob = convMatlab(Opt.prob,opts_opti); 
 geodesic.nlprob.options = ...
@@ -218,12 +218,14 @@ x_u_e_thetahat0 = [x0;controller.u_nom_fcn(0);ue0(end);[0;0]]; % state, input, e
 Klp = [500*ones(3,1)];  
 %ode23 is fastest, followed by ode45 
 % OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
-% [tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
+OPTIONS = odeset('RelTol',2e-5,'AbsTol',1e-6);
+
+[tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
 % 
 % ----------------------- ode1: fixed step ----------------------------
 % duration = 6;
-times = 0:sim_config.step_size:duration;
-x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
+% times = 0:sim_config.step_size:duration;
+% x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
 % ---------------------------------------------------------------------
 x_u_e_thetahat_Traj = x_u_e_thetahat_Traj';
 xTraj = x_u_e_thetahat_Traj(1:n,:);

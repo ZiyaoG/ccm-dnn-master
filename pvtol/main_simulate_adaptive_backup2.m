@@ -25,7 +25,7 @@ plant.phi = @(t,x) 0.3*(x(4)^2+x(5)^2)/2*[1 0;0 1]*[-1+0.3*sin(2*t) 0; 0 -1+0.3*
 
 %% adaptive control setting
 controller.adaptive_comp = 1;       %{0,1} whether to add adaptive_comp 
-controller.adaptation_gain = 5*diag([1 1]);
+controller.adaptation_gain = 100*diag([1 1]);
 
 % --------------------- actual disturbance settings -----------------------
 % dist_config.dist_fcn = @(x) (x(4)^2+x(5)^2)*[0.1;0.1];
@@ -40,10 +40,10 @@ use_distModel_in_planning_control = 0;  % {1,0}: whether to include a (learned) 
 controller.use_distModel_in_planning_control = use_distModel_in_planning_control;
 
 %  -----------------------simulation settings -----------------------------
-sim_config.replan_nom_traj = 0;     % {1,0}: whether to replan a trajectory
+sim_config.replan_nom_traj = 1;     % {1,0}: whether to replan a trajectory
 sim_config.include_obs = 1;         % {1,0}: whether to include the obstacles
 sim_config.include_dist = 1;        % {1,0}: whether to include the disturbance  
-sim_config.save_sim_rst = 1;        % {1,0}: whether to save simulation results
+sim_config.save_sim_rst = 0;        % {1,0}: whether to save simulation results
 sim_config.tight_input_bnd = 1;     % {1,0}: whether to tighten the input bnd for trajectory generation
 sim_config.include_tube = 0;        % {1,0}: whether to include a safety tube when plannign the trajectories
 sim_config.step_size = 0.0001;      % step size for simulation with ode1 solver (not used when using a variable-step solver)
@@ -217,13 +217,14 @@ tic;
 x_u_e_thetahat0 = [x0;controller.u_nom_fcn(0);ue0(end);[0;0]]; % state, input, energy,estimated paras; (,estimated disturbance);
 Klp = [500*ones(3,1)];  
 %ode23 is fastest, followed by ode45 
-% OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
-% [tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
+OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
+times = 0:sim_config.step_size:duration;
+[tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
 % 
 % ----------------------- ode1: fixed step ----------------------------
 % duration = 6;
-times = 0:sim_config.step_size:duration;
-x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
+% times = 0:sim_config.step_size:duration;
+% x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
 % ---------------------------------------------------------------------
 x_u_e_thetahat_Traj = x_u_e_thetahat_Traj';
 xTraj = x_u_e_thetahat_Traj(1:n,:);

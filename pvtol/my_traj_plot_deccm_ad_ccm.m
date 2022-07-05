@@ -5,7 +5,7 @@ figure(1);
 hold on;
 %% Task 1
 
-load('theSwedenWorkshop/data/robust_CCM_ode1_constantintensity_03_03_00_88.mat');
+load('theSwedenWorkshop/data/_dtx_adaptiveCCM_ode1_constantintensity_03_03_00_88.mat');
 xx = -1.5:0.05:13;
 zz = 0:0.05:13;
 [X,Z] = meshgrid(xx,zz);
@@ -25,9 +25,9 @@ trajGen_config.obs = obs;
 % if sim_config.include_dist == 1
 %     visualize_dist_area(Dist_distribution);
 % end
-if trajGen_config.include_obs == 1
-    visualize_obs(trajGen_config.obs,gray_color);
-end
+% if trajGen_config.include_obs == 1
+%     visualize_obs(trajGen_config.obs,gray_color);
+% end
 h1 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',3);
 
 h3 = plot(xTraj(1,:),xTraj(2,:),'Color', 'm','LineStyle',':','Linewidth',1.5);
@@ -39,9 +39,9 @@ h3 = plot(xTraj(1,:),xTraj(2,:),'Color', 'm','LineStyle',':','Linewidth',1.5);
 load('theSwedenWorkshop/data/_dtx_adaptiveCCM_ode23_constantintensity_03_03_00_88_gain100.mat');
 h5 = plot(xTraj(1,:),xTraj(2,:),'Color', [0 1 0],'LineStyle','-.','Linewidth',2);
 %% 
-load('theSwedenWorkshop/data/_dtx_DECCM_ode23_constantintensity_03_03_00_88.mat');
-h4 = plot(xTraj(1,:),xTraj(2,:),'Color', [0 0 1],'LineStyle','-.','Linewidth',1);
-% [0.4660 0.6740 0.1880][0 0.4470 0.7410]
+% load('theSwedenWorkshop/data/_dtx_DECCM_ode23_constantintensity_03_03_00_88.mat');
+% h4 = plot(xTraj(1,:),xTraj(2,:),'Color', [0 0 1],'LineStyle','-.','Linewidth',1);
+% % [0.4660 0.6740 0.1880][0 0.4470 0.7410]
 
 %% 
 load('theSwedenWorkshop/data/_dtx_DECCM_ode1_constantintensity_03_03_00_88.mat');
@@ -50,7 +50,7 @@ h2 = plot(xTraj(1,:),xTraj(2,:),'Color', 'r','LineStyle','-','Linewidth',1);
 axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
-legend([h1,h2,h3,h4,h5],{'Planned', 'DE-CCM','Robust-CCM', 'DE-CCM-23','Ad-CCM($\Gamma=100$)'},'NumColumns',3,'Location','Northwest','Orientation','horizontal','interpreter','latex');
+legend([h1,h2,h3,h5],{'Planned', 'DE-CCM','Ad-CCM','Ad-CCM($\Gamma=100$)'},'NumColumns',3,'Location','Northwest','Orientation','horizontal','interpreter','latex');
 
 xlim([0 8.5]);
 ylim([0 8.5]);

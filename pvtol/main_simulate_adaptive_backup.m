@@ -157,7 +157,7 @@ end
 % -------------------------------------------------------------------------
 
 % ----------for using matlab fmincon solver--------------------------------
-opts_opti = optiset('solver','matlab','maxiter',500,'tolrfun',1e-4,'tolafun',1e-4,'display','off','derivCheck','off'); 
+opts_opti = optiset('solver','matlab','maxiter',500,'tolrfun',5e-6,'tolafun',5e-6,'display','off','derivCheck','off'); 
 Opt = opti('fun',costf,'grad',grad,'eq',Aeq,beq,'bounds',lb,ub,'ndec',ndec,'x0',c0,'options',opts_opti);
 geodesic.nlprob = convMatlab(Opt.prob,opts_opti); 
 geodesic.nlprob.options = ...
@@ -218,6 +218,7 @@ x_u_e_thetahat0 = [x0;controller.u_nom_fcn(0);ue0(end);[0;0]]; % state, input, e
 Klp = [500*ones(3,1)];  
 %ode23 is fastest, followed by ode45 
 % OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
+% % OPTIONS = odeset('RelTol',2e-4,'AbsTol',1e-6);
 % [tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
 % 
 % ----------------------- ode1: fixed step ----------------------------
@@ -238,19 +239,6 @@ plot_and_save
 %% some functions
 
 %% some functions
-                  
-% function dstate_dt = pvtol_dyn2(t,state,u,thetahat_dot,plant,sim_config,dist_config)
-% n = plant.n;
-% x = state(1:n);
-% % thetahat = x_thetahat(n+1:end);
-% 
-% wt = dist_config.dist_fcn(x);
-% 
-% dstate_dt = [plant.f_fcn(x);thetahat_dot]+[plant.B_fcn(x)*u;[0;0]];
-% if sim_config.include_dist == 1
-%    dstate_dt(1:n,:) = dstate_dt(1:n,:) + plant.B_fcn(x)*wt;
-% end
-% end
 
 function dstate = pvtol_dyn(t,x_u_e_thetahat,Klp,plant,controller,sim_config,dist_config)
 n = plant.n;

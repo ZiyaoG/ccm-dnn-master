@@ -17,9 +17,9 @@ x0xF_config = 1; % {1,2,3,4,5,6}
 
 
 % ---whether to include dist. estimation and error bound in CCM control----
-controller.distEstScheme = 2;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde ur$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
-controller.use_distEst_errBnd = 1; 
-controller.filter_distEst = 1;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
+controller.distEstScheme = 0;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde ur$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
+controller.use_distEst_errBnd = 0; 
+controller.filter_distEst = 0;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
 
 % --------------------- actual disturbance settings -----------------------
 dist_config.center = [4,4]';
@@ -50,15 +50,16 @@ distEst_config.adapt_gain = -distEst_config.a_pred/(exp(distEst_config.a_pred*di
 % compute_est_err_bnd; 
 % 
 % set to an artificial value
-distEst_config.est_errBnd = 1.38;
+distEst_config.est_errBnd = 0.1;
+% distEst_config.est_errBnd = 1.38;
 
 %  -----------------------simulation settings -----------------------------
 sim_config.replan_nom_traj = 0;     % {1,0}: whether to replan a trajectory
 sim_config.include_obs = 1;         % {1,0}: whether to include the obstacles
-sim_config.include_dist = 1;        % {1,0}: whether to include the disturbance  
-sim_config.save_sim_rst = 1;        % {1,0}: whether to save simulation results
+sim_config.include_dist = 0;        % {1,0}: whether to include the disturbance  
+sim_config.save_sim_rst = 0;        % {1,0}: whether to save simulation results
 sim_config.tight_input_bnd = 1;     % {1,0}: whether to tighten the input bnd for trajectory generation
-sim_config.include_tube = 1;        % {1,0}: whether to include a safety tube when plannign the trajectories
+sim_config.include_tube = 0;        % {1,0}: whether to include a safety tube when plannign the trajectories
 sim_config.step_size = 0.0001;       % step size for simulation with ode1 solver (not used when using a variable-step solver)
 
 use_generated_code = 1;             % whether to use the generated codes for simulations: using generated codes can accelerate by at least one fold
@@ -149,9 +150,9 @@ if sim_config.replan_nom_traj == 1
     Dist_distribution.Z = Z;
     Dist_distribution.intensity = Dist_intensity;
     visualize_dist_area(Dist_distribution);
-    if sim_config.include_obs == 1
-        visualize_obs(obs,gray_color);
-    end
+%     if sim_config.include_obs == 1
+%         visualize_obs(obs,gray_color);
+%     end
     xlim([0 8]);
     ylim([0 8]);
     trajGen_config.obs = obs;
@@ -183,9 +184,9 @@ hold on;
 visualize_dist_area(Dist_distribution);
 
 plot(xnomTraj(1,:),xnomTraj(2,:),'linewidth',1);
-if trajGen_config.include_obs == 1
-    visualize_obs(trajGen_config.obs,gray_color);
-end    
+% if trajGen_config.include_obs == 1
+%     visualize_obs(trajGen_config.obs,gray_color);
+% end    
 sim_config.trajGen_config = trajGen_config;
 figure(2);
 subplot(2,1,1)
@@ -320,7 +321,7 @@ end
 % -------------------------------------------------------------------------
 
 % ----------for using matlab fmincon solver--------------------------------
-opts_opti = optiset('solver','matlab','maxiter',500,'tolrfun',1e-4,'tolafun',1e-4,'display','off','derivCheck','off'); 
+opts_opti = optiset('solver','matlab','maxiter',500,'tolrfun',5e-6,'tolafun',5e-6,'display','off','derivCheck','off'); 
 Opt = opti('fun',costf,'grad',grad,'eq',Aeq,beq,'bounds',lb,ub,'ndec',ndec,'x0',c0,'options',opts_opti);
 geodesic.nlprob = convMatlab(Opt.prob,opts_opti); 
 geodesic.nlprob.options = ...
@@ -344,7 +345,8 @@ dist0 = norm(x0);
 % ode_opts = odeset('MaxStep',5e-1);
 % --------for additionally outputing control inputs and Reim. energy-------
 % compute the initial Riemann energy function value
-ue = robust_ccm_law(0,x0,plant,controller,distLearned,[0 0]',distEst_config.est_errBnd);
+ue = ccm_law(0,x0,plant,controller,distLearned,[0 0]',distEst_config.est_errBnd);
+% ue = robust_ccm_law(0,x0,plant,controller,distLearned,[0 0]',distEst_config.est_errBnd);
 x_xhat_u_d_0 = [x0;x0;controller.u_nom_fcn(0);ue(end);[0;0];[0;0]]; % state, input, energy, true disturance,estimated disturbance;
 Klp = [500*ones(5,1);100;100]; % 200 rad/s is for filtering estimated uncertainties. 
 tic;
