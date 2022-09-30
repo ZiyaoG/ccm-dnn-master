@@ -47,6 +47,7 @@ if sim_config.replan_nom_traj == 1
     save(file_traj,'trajGen_config','soln','Dist_distribution');
 else
     load(file_traj);
+%     load('simulation_results_CDC/safe_exploration/CDC_RD_CCM_T_0.0001_lam_0.8_w_dist_1_with_XX_Adam_bound0.1_00_810_w_obs.mat');
 end
 duration = trajGen_config.tF;   % modify the duration according to the computed trajectory
 % duration = 3;

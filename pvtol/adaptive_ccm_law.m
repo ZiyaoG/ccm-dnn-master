@@ -1,5 +1,3 @@
-
-
 function [ue,thetahat_dot]= adaptive_ccm_law(t,x,plant,controller,thetahat,dist_config)
 persistent t_pre beq_pre copt_pre Erem_pre
 
@@ -131,9 +129,16 @@ else
     u_ccm = u_nom - phi0*phi1'/tmp;
 end
 if controller.adaptive_comp == 1
-    phi_x = plant.phi(t,x);
-    u = u_ccm + controller.adaptive_comp*phi_x'*thetahat;
-    thetahat_dot = -controller.adaptation_gain*(phi_x*phi1');
+    if controller.use_distModel_in_planning_control == 1
+        phi_x = plant.phi(x);
+        debug_para = 0;
+        u = u_ccm + debug_para*dist_config.distLearned(x) + controller.adaptive_comp*phi_x*thetahat;
+        thetahat_dot = -controller.adaptation_gain*(phi_x'*phi1');
+    else
+        phi_x = plant.phi(x);
+        u = u_ccm + controller.adaptive_comp*phi_x*thetahat;
+        thetahat_dot = -controller.adaptation_gain*(phi_x'*phi1');
+    end
 else
     u = u_ccm;
     thetahat_dot = [0;0];

@@ -1,5 +1,5 @@
 
-function ue= ccm_law(t,x,plant,controller,distLearned,distEst,distEst_errBnd)
+function ue= robust_ccm_law(t,x,plant,controller,distLearned,distEst,distEst_errBnd)
 persistent t_pre beq_pre copt_pre Erem_pre
 
 if isempty(t_pre) || (t == 0 && t_pre ~=0)
@@ -148,6 +148,7 @@ end
 if controller.distEstScheme ~= 0
     if controller.use_distEst_errBnd == 1
         phi0 = phi0 + norm(gamma_s1_Mx*plant.B)*distEst_errBnd; 
+%         phi0 = phi0 + norm(gamma_s1_Mx)*distEst_errBnd; 
     end
 end
 if phi0 <=0

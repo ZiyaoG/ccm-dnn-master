@@ -7,7 +7,7 @@ for t =1:simuLen
     xnomTraj(:,t) = x_nom_fcn(times(t));
     unomTraj(:,t) = u_nom_fcn(times(t));
 end
-times = 0:0.05:duration;
+% times = 0:0.05:duration;
 addText = 'CCM';
 close all;
 figure(1); clf;
@@ -64,11 +64,12 @@ axis square
 xlabel('p_x (m)')
 ylabel('p_z (m)')
 legend([h1,h2],{'Planned','Actual'});
-xlim([0 8]);
-ylim([0 8]);
+xlim([0 10]);
+ylim([0 10]);
 w_max = 1;
 if sim_config.save_sim_rst == 1
-%     file_name = ['newmodel_adaptiveCCM_ode1_constantintensity_015_03_00_88_gain10'];
-    file_name = ['backup2_adaptiveCCM_ode23_constantintensity_03_00_88_gain100'];
+%     file_name = ['adaptiveCCM_ode1_0.0001_no_learning_00_810_polybasefunc_gain01.mat'];
+    file_name = ['adaptiveCCM_ode1_0.0002_moderate_learning_00_810_polybasefunc_gain01.mat'];
+%     file_name = ['adaptiveCCM_ode1_0.0001_perfect_learning_00_810_polybasefunc_gain01.mat'];
     save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller');
 end

@@ -17,25 +17,25 @@ x0xF_config = 1; % {1,2,3,4,5,6}
 
 
 % ---whether to include dist. estimation and error bound in CCM control----
-controller.distEstScheme = 0;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde ur$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
-controller.use_distEst_errBnd = 0; 
-controller.filter_distEst = 0;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
+controller.distEstScheme = 2;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde ur$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
+controller.use_distEst_errBnd = 1; 
+controller.filter_distEst = 1;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
 
 % --------------------- actual disturbance settings -----------------------
-dist_config.center = [4,4]';
-dist_config.radius = 4;
+dist_config.center = [5,5]';
+dist_config.radius = 5;
 dist_config.dist_fcn = @(t,x) actual_dist_fcn(t,x,dist_config.center,dist_config.radius);
 
 % --------(learned) disturbance model, to be replaced by a NN model--------
-use_distModel_in_planning_control = 0;  % {1,0}: whether to include a (learned) disturbance model in planning and control
+use_distModel_in_planning_control = 1;  % {1,0}: whether to include a (learned) disturbance model in planning and control
 % distLearned = @(x) learned_dist_fcn(x,dist_config.center,dist_config.radius);
 % distLearned = @(x) zero_dist(x);        % Zero disturbance model
 controller.use_distModel_in_planning_control = use_distModel_in_planning_control;
 
 
 % Ziyao
-params = load('CDC_safe_explo.mat').params;
-prd_dist = @(x) -CDC_safe_explo(x,params);
+params = load('params_better.mat').params;
+prd_dist = @(x) -uncer_func_better(x,params);
 distLearned = @(x) learned_dist_fcn(x,prd_dist);
 % distLearned = @(x) perfect_learner(x,dist_config.center,dist_config.radius);
 
@@ -50,24 +50,25 @@ distEst_config.adapt_gain = -distEst_config.a_pred/(exp(distEst_config.a_pred*di
 % compute_est_err_bnd; 
 % 
 % set to an artificial value
-distEst_config.est_errBnd = 0.1;
-% distEst_config.est_errBnd = 1.38;
+% distEst_config.est_errBnd = 0.1;
+distEst_config.est_errBnd = 2.5*sqrt(2);
 
 %  -----------------------simulation settings -----------------------------
-sim_config.replan_nom_traj = 0;     % {1,0}: whether to replan a trajectory
+sim_config.replan_nom_traj = 1;     % {1,0}: whether to replan a trajectory
 sim_config.include_obs = 1;         % {1,0}: whether to include the obstacles
-sim_config.include_dist = 0;        % {1,0}: whether to include the disturbance  
-sim_config.save_sim_rst = 0;        % {1,0}: whether to save simulation results
-sim_config.tight_input_bnd = 1;     % {1,0}: whether to tighten the input bnd for trajectory generation
-sim_config.include_tube = 0;        % {1,0}: whether to include a safety tube when plannign the trajectories
-sim_config.step_size = 0.0001;       % step size for simulation with ode1 solver (not used when using a variable-step solver)
+sim_config.include_dist = 1;        % {1,0}: whether to include the disturbance  
+sim_config.save_sim_rst = 1;        % {1,0}: whether to save simulation results
+sim_config.tight_input_bnd = 0; 
+% {1,0}: whether to tighten the input bnd for trajectory generation
+sim_config.include_tube = 1;        % {1,0}: whether to include a safety tube when plannign the trajectories
+sim_config.step_size = 0.0002;       % step size for simulation with ode1 solver (not used when using a variable-step solver)
 
 use_generated_code = 1;             % whether to use the generated codes for simulations: using generated codes can accelerate by at least one fold
 
 n = 6; nu = 2;
 if x0xF_config == 1
         x0 = [2;0;zeros(4,1)];     % initial state
-        xF = [8 8 0 0 0 0]';      % final state
+        xF = [8 10 0 0 0 0]';      % final state
 elseif x0xF_config == 2
 %         x0 = [8;0;zeros(4,1)];     % initial state
 %         xF = [2 10 0 0 0 0]';      % final state
@@ -101,7 +102,7 @@ end
 
 % x0 = [0;0;zeros(4,1)];                    % initial state
 % xF = [10 10 0 0 0 0]';              % final state
-duration = 15;                      % (estimated) time 
+duration = 13;                      % (estimated) time 
 umax = 1.5*plant.m*plant.g;           % control limit
 % ----- bounds for input and states for using OptimTraj to plan trajs.-----
 u_bnd = [0 0; umax umax]';
@@ -135,24 +136,24 @@ if sim_config.replan_nom_traj == 1
     % ------------------------ Specify the obstacles-----------------------
 %     obs = [3.8 5 0.8;           
 %             6.2 5 0.8];        
-    obs = [2.1 5 0.6;           
-    5.9 5 0.6;
-    4 2 0.6]; %     5 3 0.5
+    obs = [3.1 6 0.6;           
+    6.9 6 0.6;
+    5 3 0.6]; %     5 3 0.5
     trajGen_config.obs = obs;
            
     figure(1);clf;hold on;    
     % visualize the area with disturbances
-    xx = 0:0.05:8;
-    zz = 0:0.05:8;
+    xx = 0:0.05:10;
+    zz = 0:0.05:10;
     [X,Z] = meshgrid(xx,zz);
     Dist_intensity= dist_distribution(X,Z,dist_config.center,dist_config.radius);
     Dist_distribution.X = X;
     Dist_distribution.Z = Z;
     Dist_distribution.intensity = Dist_intensity;
     visualize_dist_area(Dist_distribution);
-%     if sim_config.include_obs == 1
-%         visualize_obs(obs,gray_color);
-%     end
+    if sim_config.include_obs == 1
+        visualize_obs(obs,gray_color);
+    end
     xlim([0 8]);
     ylim([0 8]);
     trajGen_config.obs = obs;
@@ -184,9 +185,9 @@ hold on;
 visualize_dist_area(Dist_distribution);
 
 plot(xnomTraj(1,:),xnomTraj(2,:),'linewidth',1);
-% if trajGen_config.include_obs == 1
-%     visualize_obs(trajGen_config.obs,gray_color);
-% end    
+if trajGen_config.include_obs == 1
+    visualize_obs(trajGen_config.obs,gray_color);
+end    
 sim_config.trajGen_config = trajGen_config;
 figure(2);
 subplot(2,1,1)
@@ -430,9 +431,9 @@ end
 
 figure(3);clf;
 hold on;
-% if sim_config.include_dist == 1
-%     visualize_dist_area(Dist_distribution);
-% end
+if sim_config.include_dist == 1
+    visualize_dist_area(Dist_distribution);
+end
 if trajGen_config.include_obs == 1
     visualize_obs(trajGen_config.obs,gray_color);
 end
@@ -446,8 +447,8 @@ axis square
 xlabel('p_x (m)')
 ylabel('p_z (m)')
 legend([h1,h2],{'Planned','RD-CCM'});
-xlim([-1 8]);
-ylim([-1 8]);
+xlim([0 10]);
+ylim([0 10]);
 w_max = 1;
 % if sim_config.save_sim_rst == 1
 %     if controller.distEstScheme == 2    
@@ -476,7 +477,7 @@ w_max = 1;
 
 %%
 if sim_config.save_sim_rst == 1
-    file_name = ['robust_CCM_ode23_constantintensity_03_03'];
+    file_name = ['ACC/robustanddeccm comparison/robust_CCM_moderate_learning_02ms'];
     file_name = [file_name '_' num2str(x0(1)) num2str(x0(2)) '_' num2str(xF(1)) num2str(xF(2))];
     save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller','estDistTraj');
 end
@@ -515,22 +516,23 @@ if controller.filter_distEst == 1
 else
     distEst_ccm_control = distEst;
 end
+% ue = ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
 ue = robust_ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
+
 % toc;
 u = ue(1:end-1); 
 wt = dist_config.dist_fcn(t,x);
 
 % ------------------- update state predictor -----------------------------
-xdot = plant.f_fcn(x)+plant.B_fcn(x)*u; % nominal dynamics;
+xdot = plant.f_fcn(x)+plant.B_fcn(x)*ue(1:end-1); % nominal dynamics;
 if controller.use_distModel_in_planning_control == 1 && controller.distEstScheme == 1
         xdot = xdot  + plant.B_fcn(x)*distLearned(x);
 end
 xhatdot = xdot + Bsigmahat - distEst_config.a_pred*xtilde;
 % ------------------------------------------------------------------------
 
-
 % update the states of actual system, state predictor, ...
-dxdt = [xdot; xhatdot; -Klp.*u_e_dist_estDist_filter]+[zeros(n,1); zeros(n,1); Klp.*[ue;wt;distEst]];
+dxdt = [xdot; xhatdot; -Klp.*u_e_dist_estDist_filter]+[zeros(n,1); zeros(n,1); Klp.*[u;ue(end);wt;distEst]];
 if sim_config.include_dist == 1
    dxdt(1:n,:) = dxdt(1:n,:) + plant.B_fcn(x)*wt;
 end
@@ -565,10 +567,10 @@ function dist_force = actual_dist_fcn(t,x,center,radius)
 % x is a n by m matrix, where each column represents a state vector value 
 max_damping = 0.5;
 
-% [dist_intensity,~] = dist_distribution(x(1,:),x(2,:),center,radius);
-dist_intensity = 0.3;
+[dist_intensity,~] = dist_distribution(x(1,:),x(2,:),center,radius);
+% dist_intensity = 0.3;
 dist_force_max = (x(4,:)^2+x(5,:)^2)*max_damping;
-dist_force = [-1+0.3*sin(2*t); -1+0.3*cos(2*t)]*(dist_intensity.*dist_force_max); %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% changed %%%%%%%%%%%%%%
+dist_force = [-1; -1]*(dist_intensity.*dist_force_max); %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% changed %%%%%%%%%%%%%%
 % dist_force = -1./(1+exp(-5*phi))*0.1*(x(4)^2+x(5)^2);
 end
 

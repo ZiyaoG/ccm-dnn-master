@@ -39,4 +39,4 @@ yticklabels(ax, strrep(yticklabels(ax),'-','–'));
 set(ax,'ticklabelinterpreter','none') %or 'tex' but not 'latex'
 
 % print('With partial learning_ccm fails.pdf', '-painters', '-dpdf', '-r150');
-print('theSwedenWorkshop/Input1_deccm_ad_ccm.pdf', '-painters', '-dpdf', '-r150');
+% print('theSwedenWorkshop/Input1_deccm_ad_ccm.pdf', '-painters', '-dpdf', '-r150');
