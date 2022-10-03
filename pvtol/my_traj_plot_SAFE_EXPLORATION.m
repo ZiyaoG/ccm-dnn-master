@@ -158,13 +158,13 @@ axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
 % legend([h1,h2,h3,h4,h5,h6,h7,h8,h9],{'T1:Planned', 'T1:DE-CCM', 'T1:CCM', 'T2:Planned', 'T2:DE-CCM', 'T2:CCM', 'T3:Planned', 'T3:DE-CCM', 'T3:CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
-legend([h1,h2, h3, h6],{'Planned', 'DE-CCM', 'Start', 'End'},'NumColumns',4,'Location','North','Orientation','horizontal');
+legend([h1,h2, h3, h6],{'Planned', 'DE-CCM', 'Start', 'Target'},'NumColumns',4,'Location','North','Orientation','horizontal');
 
 xlim([-1.5 10.5]);
 ylim([0 12]);
 goodplot([5 5]);
 
-% print('CDC_figure/Safe Exploration.pdf', '-painters', '-dpdf', '-r150');
+print('CDC_figure/Safe Exploration.pdf', '-painters', '-dpdf', '-r150');
 %% functions
 function [intensity,distance_to_center] = dist_distribution(X,Z,center,radius)
 distance_to_center = sqrt((X-center(1)).^2 + (Z-center(2)).^2);

@@ -13,7 +13,7 @@ controller_type = 'ccm';            % {'ccm','ccm-dnn','ccm-dnn-de'} 'de' refers
 file_controller = 'ccm_0.8_plim_0.33pi.mat';          
 load(file_controller);
 % start and end positions
-x0xF_config = 2; % {1,2,3,4,5,6}
+x0xF_config = 1; % {1,2,3,4,5,6}
 
 
 % ---whether to include dist. estimation and error bound in CCM control----
@@ -27,15 +27,15 @@ dist_config.radius = 5;
 dist_config.dist_fcn = @(t,x) actual_dist_fcn(t,x,dist_config.center,dist_config.radius);
 
 % --------(learned) disturbance model, to be replaced by a NN model--------
-use_distModel_in_planning_control = 1;  % {1,0}: whether to include a (learned) disturbance model in planning and control
+use_distModel_in_planning_control = 0;  % {1,0}: whether to include a (learned) disturbance model in planning and control
 % distLearned = @(x) learned_dist_fcn(x,dist_config.center,dist_config.radius);
 % distLearned = @(x) zero_dist(x);        % Zero disturbance model
 controller.use_distModel_in_planning_control = use_distModel_in_planning_control;
 
 
 % Ziyao
-params = load('params_better.mat').params;
-prd_dist = @(x) -uncer_func_better(x,params);
+params = load('params_perfect.mat').params;
+prd_dist = @(x) -uncer_func_perfect(x,params);
 distLearned = @(x) learned_dist_fcn(x,prd_dist);
 % distLearned = @(x) perfect_learner(x,dist_config.center,dist_config.radius);
 
@@ -54,7 +54,7 @@ distEst_config.est_errBnd = 0.1;
 % distEst_config.est_errBnd = 2.5*sqrt(2);
 
 %  -----------------------simulation settings -----------------------------
-sim_config.replan_nom_traj = 1;     % {1,0}: whether to replan a trajectory
+sim_config.replan_nom_traj = 0;     % {1,0}: whether to replan a trajectory
 sim_config.include_obs = 1;         % {1,0}: whether to include the obstacles
 sim_config.include_dist = 1;        % {1,0}: whether to include the disturbance  
 sim_config.save_sim_rst = 1;        % {1,0}: whether to save simulation results
@@ -358,7 +358,7 @@ tic;
 % -----------------------------------------------------------------------
 
 % ----------------------- ode1: fixed step ----------------------------
-% duration=1;
+% duration=0.3;
 times = 0:sim_config.step_size:duration;
 x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config,duration),times,x_xhat_u_d_0); %,ode_opts)
 % ---------------------------------------------------------------------
@@ -477,7 +477,7 @@ w_max = 1;
 
 %%
 if sim_config.save_sim_rst == 1
-    file_name = ['ACC/DECCM_no_learning_02ms_delay250steps_delayinestimator'];
+    file_name = ['ACC/DECCM_no_learning_02ms_delay100steps_delayoutsideestimator'];
     file_name = [file_name '_' num2str(x0(1)) num2str(x0(2)) '_' num2str(xF(1)) num2str(xF(2))];
     save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller','estDistTraj');
 end
@@ -492,7 +492,7 @@ if isempty(distEst)
 %     uehold = [0;0];
     uTrajin = zeros(2,ceil(duration/sim_config.step_size));
 end
-delaysteps = 250;
+delaysteps = 100;
 n = plant.n;
 x = x_xhat_u_d(1:n);
 xhat = x_xhat_u_d(n+1:2*n);
@@ -528,21 +528,22 @@ uTrajin(:,round(t/sim_config.step_size+1)) = ue(1:2);
 wt = dist_config.dist_fcn(t,x);
 
 % ------------------- update state predictor -----------------------------
-% xdot = plant.f_fcn(x)+plant.B_fcn(x)*ue(1:end-1); % nominal dynamics;
-% if controller.use_distModel_in_planning_control == 1 && controller.distEstScheme == 1
-%         xdot = xdot  + plant.B_fcn(x)*distLearned(x);
-% end
-% xhatdot = xdot + Bsigmahat - distEst_config.a_pred*xtilde;
+xdot = plant.f_fcn(x)+plant.B_fcn(x)*ue(1:end-1); % nominal dynamics;
+if controller.use_distModel_in_planning_control == 1 && controller.distEstScheme == 1
+        xdot = xdot  + plant.B_fcn(x)*distLearned(x);
+end
+xhatdot = xdot + Bsigmahat - distEst_config.a_pred*xtilde;
 % ------------------------------------------------------------------------
 if round(t/sim_config.step_size) < delaysteps
     xdot = plant.f_fcn(x)+plant.B_fcn(x)*[0;0];
 else 
     xdot = plant.f_fcn(x)+plant.B_fcn(x)*uTrajin(:,1+max(0,round(t/sim_config.step_size-delaysteps))); % nominal dynamics;
 end
-if controller.use_distModel_in_planning_control == 1 && controller.distEstScheme == 1
-        xdot = xdot  + plant.B_fcn(x)*distLearned(x);
-end
-xhatdot = xdot + Bsigmahat - distEst_config.a_pred*xtilde;
+
+% if controller.use_distModel_in_planning_control == 1 && controller.distEstScheme == 1
+%         xdot = xdot  + plant.B_fcn(x)*distLearned(x);
+% end
+% xhatdot = xdot + Bsigmahat - distEst_config.a_pred*xtilde;
 
 % update the states of actual system, state predictor, ...
 if round(t/sim_config.step_size) < delaysteps

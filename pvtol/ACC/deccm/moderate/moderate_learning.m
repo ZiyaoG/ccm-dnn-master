@@ -107,17 +107,17 @@ goodplot([5 5]);
 
 
 %%
-axis square
+axis equal
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
 % legend([h1,h2,h3,h4,h5,h6,h7,h8,h9],{'T1:Planned', 'T1:DE-CCM', 'T1:CCM', 'T2:Planned', 'T2:DE-CCM', 'T2:CCM', 'T3:Planned', 'T3:DE-CCM', 'T3:CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
-legend([h1,h2,h11,h12,h13],{'Planned', 'DE-CCM', '$x$ start', '$x$ end','$x^*$ start'},'NumColumns',3,'Location','North','Orientation','horizontal','interpreter','latex');
+legend([h1,h2,h11,h13,h12],{'Planned', 'DE-CCM', '$x$ start','$x^*$ start', 'target'},'NumColumns',5,'Location','northeast','Orientation','horizontal','interpreter','latex');
 
-xlim([-0 12.5]);
-ylim([0 12.5]);
-goodplot([5 5]);
+xlim([0 12.5]);
+ylim([0 11]);
+goodplot([5.5 5]);
 
-print('With moderate learning_DE.pdf', '-painters', '-dpdf', '-r150');
+print('Withmoderatelearning_DE.pdf', '-painters', '-dpdf', '-r150');
 %% functions
 function [intensity,distance_to_center] = dist_distribution(X,Z,center,radius)
 distance_to_center = sqrt((X-center(1)).^2 + (Z-center(2)).^2);

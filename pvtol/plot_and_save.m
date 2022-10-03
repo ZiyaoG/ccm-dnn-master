@@ -69,7 +69,7 @@ ylim([0 10]);
 w_max = 1;
 if sim_config.save_sim_rst == 1
 %     file_name = ['adaptiveCCM_ode1_0.0001_no_learning_00_810_polybasefunc_gain01.mat'];
-    file_name = ['adaptiveCCM_ode1_0.0002_moderate_learning_00_810_polybasefunc_gain01.mat'];
+    file_name = ['adaptiveCCM_ode1_0.0002_no_learning_00_810_realbasefunc_gain01_delay10ms.mat'];
 %     file_name = ['adaptiveCCM_ode1_0.0001_perfect_learning_00_810_polybasefunc_gain01.mat'];
     save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller');
 end

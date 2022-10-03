@@ -34,8 +34,8 @@ controller.use_distModel_in_planning_control = use_distModel_in_planning_control
 
 
 % Ziyao
-params = load('params_better.mat').params;
-prd_dist = @(x) -uncer_func_better(x,params);
+params = load('params_perfect.mat').params;
+prd_dist = @(x) -uncer_func_perfect(x,params);
 distLearned = @(x) learned_dist_fcn(x,prd_dist);
 % distLearned = @(x) perfect_learner(x,dist_config.center,dist_config.radius);
 
@@ -50,11 +50,11 @@ distEst_config.adapt_gain = -distEst_config.a_pred/(exp(distEst_config.a_pred*di
 % compute_est_err_bnd; 
 % 
 % set to an artificial value
-% distEst_config.est_errBnd = 0.1;
-distEst_config.est_errBnd = 2.5*sqrt(2);
+distEst_config.est_errBnd = 0.1;
+% distEst_config.est_errBnd = 2.5*sqrt(2);
 
 %  -----------------------simulation settings -----------------------------
-sim_config.replan_nom_traj = 1;     % {1,0}: whether to replan a trajectory
+sim_config.replan_nom_traj = 0;     % {1,0}: whether to replan a trajectory
 sim_config.include_obs = 1;         % {1,0}: whether to include the obstacles
 sim_config.include_dist = 1;        % {1,0}: whether to include the disturbance  
 sim_config.save_sim_rst = 1;        % {1,0}: whether to save simulation results
@@ -477,18 +477,19 @@ w_max = 1;
 
 %%
 if sim_config.save_sim_rst == 1
-    file_name = ['ACC/robustanddeccm comparison/robust_CCM_moderate_learning_02ms'];
+    file_name = ['ACC/robustanddeccm comparison/DE_CCM_perfect_learning_02ms_50delaysteps'];
     file_name = [file_name '_' num2str(x0(1)) num2str(x0(2)) '_' num2str(xF(1)) num2str(xF(2))];
     save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller','estDistTraj');
 end
 
 
 %% some functions
-function dxdt = pvtol_dyn(t,x_xhat_u_d,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config)
-persistent distEst Bsigmahat
+function dxdt = pvtol_dyn(t,x_xhat_u_d,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config,duration)
+persistent distEst Bsigmahat uTrajin
 if isempty(distEst)
     distEst = [0;0];
     Bsigmahat = zeros(6,1);
+    uTrajin = zeros(2,ceil(duration/sim_config.step_size));
 end
 n = plant.n;
 x = x_xhat_u_d(1:n);
@@ -516,8 +517,8 @@ if controller.filter_distEst == 1
 else
     distEst_ccm_control = distEst;
 end
-% ue = ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
-ue = robust_ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
+ue = ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
+% ue = robust_ccm_law(t,x,plant,controller,distLearned,distEst_ccm_control,distEst_config.est_errBnd);
 
 % toc;
 u = ue(1:end-1); 

@@ -26,10 +26,10 @@ dist_config.radius = 5;
 %                   1 x(1) x(1)^2 x(1)^3 x(1)^4 x(2) x(2)^2 x(2)^3 x(2)^4 x(4) x(4)^2 x(4)^3 x(4)^4 x(5) x(5)^2 x(5)^3 x(5)^4];
 % plant.phi = @(x) [1 x(1) x(1)^2 x(1)^3 x(2) x(2)^2 x(2)^3 x(4) x(4)^2 x(4)^3 x(5) x(5)^2 x(5)^3; 
 %                   1 x(1) x(1)^2 x(1)^3 x(2) x(2)^2 x(2)^3 x(4) x(4)^2 x(4)^3 x(5) x(5)^2 x(5)^3];
-plant.phi = @(x) [1 x(1) x(1)^2 x(2) x(2)^2 x(4) x(4)^2 x(5) x(5)^2; 
-                  1 x(1) x(1)^2 x(2) x(2)^2 x(4) x(4)^2 x(5) x(5)^2];
-% plant.phi = @(x) [x(4)^2/(1+(x(1)-5)^2+(x(2)-5)^2) x(5)^2/(1+(x(1)-5)^2+(x(2)-5)^2); 
-%                   x(4)^2/(1+(x(1)-5)^2+(x(2)-5)^2) x(5)^2/(1+(x(1)-5)^2+(x(2)-5)^2)];
+% plant.phi = @(x) [1 x(1) x(1)^2 x(2) x(2)^2 x(4) x(4)^2 x(5) x(5)^2; 
+%                   1 x(1) x(1)^2 x(2) x(2)^2 x(4) x(4)^2 x(5) x(5)^2];
+plant.phi = @(x) [x(4)^2/(1+(x(1)-5)^2+(x(2)-5)^2) x(5)^2/(1+(x(1)-5)^2+(x(2)-5)^2); 
+                  x(4)^2/(1+(x(1)-5)^2+(x(2)-5)^2) x(5)^2/(1+(x(1)-5)^2+(x(2)-5)^2)];
 % plant.phi = @(x) [x(4)^2 x(5)^2; 
 %                   x(4)^2 x(5)^2];
 % plant.phi = @(x) [1 x(4) x(4)^2 x(4)^3 x(4)^4 x(5) x(5)^2 x(5)^3 x(5)^4; 
@@ -44,8 +44,8 @@ dist_config.distLearned = @(x) learned_dist_fcn(x,prd_dist);
 controller.adaptive_comp = 1;       %{0,1} whether to add adaptive_comp 
 % controller.adaptation_gain = 0.03*diag([1 1 1 0.2 0.1 1 1 0.2 0.1 1 1 0.2 0.1 1 1 0.2 0.1]);
 % controller.adaptation_gain = 0.1*diag([1 1 1 0.2 1 1 0.2 1 1 0.2 1 1 0.2]);
-controller.adaptation_gain = 0.1*diag([1 1 0.2 1 0.2 1 0.2 1 0.2]);
-% controller.adaptation_gain = 100*diag([1 1]);
+% controller.adaptation_gain = 0.1*diag([1 1 0.2 1 0.2 1 0.2 1 0.2]);
+controller.adaptation_gain = 100*diag([1 1]);
 % controller.adaptation_gain = 5*diag([1 1 1 1 1 1 1 1 1]);
 
 % --------------------- actual disturbance settings -----------------------
@@ -55,7 +55,7 @@ dist_config.dist_fcn = @(t,x) actual_dist_fcn(x,dist_config.center,dist_config.r
 
 
 % --------(learned) disturbance model, to be replaced by a NN model--------
-use_distModel_in_planning_control = 1;  % {1,0}: whether to include a (learned) disturbance model in planning and control
+use_distModel_in_planning_control = 0;  % {1,0}: whether to include a (learned) disturbance model in planning and control
 % distLearned = @(x) learned_dist_fcn(x,dist_config.center,dist_config.radius);
 % distLearned = @(x) zero_dist(x);        % Zero disturbance model
 controller.use_distModel_in_planning_control = use_distModel_in_planning_control;
@@ -194,7 +194,7 @@ controller.w_nom = 0;  % nominal value for disturbances
 
 % simulate
 dist0 = norm(x0); 
-thetahat0 = zeros([9,1]);
+thetahat0 = zeros([2,1]);
 % -------------------------------------------------------------------------
 
 % --------for additionally outputing control inputs and Reim. energy-------
@@ -234,7 +234,7 @@ tic;
 % end
 
 %% Based on ODE solver
-x_u_e_thetahat0 = [x0;controller.u_nom_fcn(0);ue0(end);zeros([9,1])]; % state, input, energy,estimated paras; (,estimated disturbance);
+x_u_e_thetahat0 = [x0;controller.u_nom_fcn(0);ue0(end);zeros([2,1])]; % state, input, energy,estimated paras; (,estimated disturbance);
 Klp = [500*ones(3,1)];  
 %ode23 is fastest, followed by ode45 
 % OPTIONS = odeset('RelTol',2e-3,'AbsTol',1e-5);
@@ -243,15 +243,15 @@ Klp = [500*ones(3,1)];
 % [tVec,x_u_e_thetahat_Traj] = ode23(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),[0 duration],x_u_e_thetahat0,OPTIONS); %,ode_opts)
 % 
 % ----------------------- ode1: fixed step ----------------------------
-duration = 10;
+duration = 5.3;
 times = 0:sim_config.step_size:duration;
-x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config),times,x_u_e_thetahat0); %,ode_opts)
+x_u_e_thetahat_Traj = ode1(@(t,state) pvtol_dyn(t,state,Klp,plant,controller,sim_config,dist_config,duration),times,x_u_e_thetahat0); %,ode_opts)
 % ---------------------------------------------------------------------
 x_u_e_thetahat_Traj = x_u_e_thetahat_Traj';
 xTraj = x_u_e_thetahat_Traj(1:n,:);
 uTraj = x_u_e_thetahat_Traj(n+1:n+2,:);
 energyTraj = x_u_e_thetahat_Traj(n+3,:);            % Riem. Energy
-thetahatTraj = x_u_e_thetahat_Traj(n+4:n+12,:);      
+thetahatTraj = x_u_e_thetahat_Traj(n+4:n+5,:);      
 
 toc;
 %% plot the result
@@ -275,19 +275,29 @@ plot_and_save
 % end
 % end
 
-function dstate = pvtol_dyn(t,x_u_e_thetahat,Klp,plant,controller,sim_config,dist_config)
+function dstate = pvtol_dyn(t,x_u_e_thetahat,Klp,plant,controller,sim_config,dist_config,duration)
+persistent uTrajin
+if isempty(uTrajin)
+    uTrajin = zeros(2,ceil(duration/sim_config.step_size));
+end
+delaysteps = 50;
 n = plant.n;
 x = x_u_e_thetahat(1:n);
 u_e = x_u_e_thetahat(n+1:n+3);
-thetahat = x_u_e_thetahat(n+4:n+12);
+thetahat = x_u_e_thetahat(n+4:n+5);
 
 [ue,thetahat_dot]= adaptive_ccm_law(t,x,plant,controller,thetahat,dist_config);
 
-u = ue(1:end-1); 
+% u = ue(1:end-1); 
+uTrajin(:,round(t/sim_config.step_size+1)) = ue(1:2);
 wt = dist_config.dist_fcn(t,x);
 
 % update the states of actual system, state predictor, ...
-dstate = [plant.f_fcn(x); -Klp.*u_e;thetahat_dot]+[plant.B_fcn(x)*u; Klp.*ue;zeros([9,1])];
+if round(t/sim_config.step_size) < delaysteps
+    dstate = [plant.f_fcn(x); -Klp.*u_e;thetahat_dot]+[plant.B_fcn(x)*[0;0]; Klp.*ue;zeros([2,1])];
+else
+    dstate = [plant.f_fcn(x); -Klp.*u_e;thetahat_dot]+[plant.B_fcn(x)*uTrajin(:,1+max(0,round(t/sim_config.step_size-delaysteps))); Klp.*ue;zeros([2,1])];
+end
 if sim_config.include_dist == 1
    dstate(1:n,:) = dstate(1:n,:) + plant.B_fcn(x)*wt;
 end

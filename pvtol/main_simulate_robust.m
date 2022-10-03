@@ -27,15 +27,15 @@ dist_config.radius = 5;
 dist_config.dist_fcn = @(t,x) actual_dist_fcn(t,x,dist_config.center,dist_config.radius);
 
 % --------(learned) disturbance model, to be replaced by a NN model--------
-use_distModel_in_planning_control = 0;  % {1,0}: whether to include a (learned) disturbance model in planning and control
+use_distModel_in_planning_control = 1;  % {1,0}: whether to include a (learned) disturbance model in planning and control
 % distLearned = @(x) learned_dist_fcn(x,dist_config.center,dist_config.radius);
 % distLearned = @(x) zero_dist(x);        % Zero disturbance model
 controller.use_distModel_in_planning_control = use_distModel_in_planning_control;
 
 
 % Ziyao
-params = load('params_better.mat').params;
-prd_dist = @(x) -uncer_func_better(x,params);
+params = load('params_perfect.mat').params;
+prd_dist = @(x) -uncer_func_perfect(x,params);
 distLearned = @(x) learned_dist_fcn(x,prd_dist);
 % distLearned = @(x) perfect_learner(x,dist_config.center,dist_config.radius);
 
@@ -357,7 +357,7 @@ tic;
 % -----------------------------------------------------------------------
 
 % ----------------------- ode1: fixed step ----------------------------
-duration=5;
+% duration=5;
 times = 0:sim_config.step_size:duration;
 noise = 0*randn(6,length(times));
 % x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
@@ -478,7 +478,7 @@ w_max = 1;
 
 %%
 if sim_config.save_sim_rst == 1
-    file_name = ['ACC/robust_CCM_nonoise_no_learning_02ms_delay175steps'];
+    file_name = ['ACC/robust_CCM_nonoise_perfect_learning_02ms_delay200steps'];
     file_name = [file_name '_' num2str(x0(1)) num2str(x0(2)) '_' num2str(xF(1)) num2str(xF(2))];
     save(file_name,'times','xTraj','uTraj','xnomTraj','unomTraj','energyTraj','dist_config','sim_config','plant','controller','estDistTraj');
 end
@@ -493,7 +493,7 @@ if isempty(distEst)
     index = 1;
     uTrajin = zeros(2,ceil(duration/sim_config.step_size));
 end
-delaysteps = 175;
+delaysteps = 200;
 n = plant.n;
 x = x_xhat_u_d(1:n);
 xhat = x_xhat_u_d(n+1:2*n);

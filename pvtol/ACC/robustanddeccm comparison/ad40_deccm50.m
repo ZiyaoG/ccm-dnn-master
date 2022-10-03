@@ -32,7 +32,7 @@ h2 = plot(xTraj(1,:),xTraj(2,:),'r-','Linewidth',1.5);
 h1 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
 
 h11 = scatter(xTraj(1,1),xTraj(2,1),'ro');
-h12 = scatter(xTraj(1,end),xTraj(2,end),60,'rp');
+% h12 = scatter(xTraj(1,end),xTraj(2,end),60,'rp');
 h13 = scatter(xnomTraj(1,1),xnomTraj(2,1),'k*');
 
 

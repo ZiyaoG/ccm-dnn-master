@@ -56,6 +56,11 @@ load('robust_CCM_nonoise_no_learning_02ms_00_810.mat');
 
 h4 = plot(xTraj(1,:),xTraj(2,:),'m-.','Linewidth',1.5);
 
+%% Task 4
+load('sim_ccm_lam_0.8_w_dist_1_00_810_w_obs.mat');
+
+h5 = plot(xTraj(1,:),xTraj(2,:),'c:','Linewidth',1.5);
+
 %% planned
 load('adaptiveCCM_ode1_0.001_no_learning_00_1010_realbasefunc.mat');
 h1 = plot(xnomTraj(1,:),xnomTraj(2,:),'k--','Linewidth',1.5);
@@ -74,7 +79,7 @@ axis square
 xlabel('$p_x$ (m)','interpreter','latex')
 ylabel('$p_z$ (m)','interpreter','latex')
 % legend([h1,h2,h3,h4,h5,h6,h7,h8,h9],{'T1:Planned', 'T1:DE-CCM', 'T1:CCM', 'T2:Planned', 'T2:DE-CCM', 'T2:CCM', 'T3:Planned', 'T3:DE-CCM', 'T3:CCM'},'NumColumns',3,'Location','North','Orientation','horizontal');
-legend([h1,h8,h2,h4],{'Planned', 'DE-CCM (ours)', 'Ad-CCM (true regressors)',  'RCCM'},'NumColumns',1,'Location','northwest','Orientation','horizontal','interpreter','latex');
+legend([h1,h8,h2,h4,h5],{'Planned', 'DE-CCM (ours)', 'Ad-CCM (true regressors)',  'RCCM', 'CCM'},'NumColumns',1,'Location','northwest','Orientation','horizontal','interpreter','latex');
 
 xlim([-0 10.5]);
 ylim([0 10.5]);
