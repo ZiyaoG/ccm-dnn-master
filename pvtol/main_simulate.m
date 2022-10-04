@@ -17,7 +17,7 @@ x0xF_config = 1; % {1,2,3,4,5,6}
 
 
 % ---whether to include dist. estimation and error bound in CCM control----
-controller.distEstScheme = 2;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde ur$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
+controller.distEstScheme = 1;       %{0,1,2}: 0 for ignoring, 1 for estimating the remainder disturbance $\tilde ur$ (between the learned disturbance and true disturbance), 2 for estimating the total disturbance d
 controller.use_distEst_errBnd = 1; 
 controller.filter_distEst = 1;      %{0,1}, whether to filter the estimated disturbance to remove the high gain components
 
@@ -43,7 +43,7 @@ distLearned = @(x) learned_dist_fcn(x,prd_dist);
         
 % ------------------- disturbance estimation setting ----------------------
 distEst_config.a_pred = 10;                    % positive constant used in the state predictor
-distEst_config.Ts = 0.002;                    % estimation sampling time
+distEst_config.Ts = 0.005;                    % estimation sampling time
 distEst_config.adapt_gain = -distEst_config.a_pred/(exp(distEst_config.a_pred*distEst_config.Ts)-1);
 
 %% computating the estimation error bound
@@ -114,89 +114,10 @@ if sim_config.tight_input_bnd == 1
 end
 % return
 %% Plan or load a nominal trajecotory 
-gray_color = [1 1 1]*80/255;
-file_traj = ['nomTraj_x0xF_config_' num2str(x0xF_config)];
-if use_distModel_in_planning_control == 1
-    file_traj = [file_traj '_w_learning.mat'];  
-else
-    file_traj = [file_traj '_no_learning.mat'];  
-end 
-if sim_config.replan_nom_traj == 1
-    trajGen_config.x0 = x0;
-    trajGen_config.xF = xF;
-    trajGen_config.x_bnd = x_bnd;
-    trajGen_config.u_bnd = u_bnd;
-    trajGen_config.include_obs = sim_config.include_obs;
-    trajGen_config.include_tube = sim_config.include_tube;
-    trajGen_config.tube_xz = tube_xz;
-    trajGen_config.duration = duration;
-    trajGen_config.include_dist_model = use_distModel_in_planning_control;
-    trajGen_config.dist_model = distLearned;
+plan_load_traj;
 
-    % ------------------------ Specify the obstacles-----------------------
-%     obs = [3.8 5 0.8;           
-%             6.2 5 0.8];        
-    obs = [3.1 6 0.6;           
-    6.9 6 0.6;
-    5 3 0.6]; %     5 3 0.5
-    trajGen_config.obs = obs;
-           
-    figure(1);clf;hold on;    
-    % visualize the area with disturbances
-    xx = 0:0.05:10;
-    zz = 0:0.05:10;
-    [X,Z] = meshgrid(xx,zz);
-    Dist_intensity= dist_distribution(X,Z,dist_config.center,dist_config.radius);
-    Dist_distribution.X = X;
-    Dist_distribution.Z = Z;
-    Dist_distribution.intensity = Dist_intensity;
-    visualize_dist_area(Dist_distribution);
-    if sim_config.include_obs == 1
-        visualize_obs(obs,gray_color);
-    end
-    xlim([0 8]);
-    ylim([0 8]);
-    trajGen_config.obs = obs;
-    soln = plan_traj_pvtol(plant,trajGen_config);
-
-    tF = soln.grid.time(end); trajGen_config.tF = tF;
-    save(file_traj,'trajGen_config','soln','Dist_distribution');
-else
-    load(file_traj);
-end
-duration = trajGen_config.tF;   % modify the duration according to the computed trajectory
-% duration = 3;
-
-%% --------------------- show the planned traj -----------------------------
-x_nom_fcn = soln.interp.state;
-u_nom_fcn = soln.interp.control;
-times = 0:0.05:duration;
-simuLen = length(times);
-xnomTraj = zeros(n,simuLen);
-unomTraj = zeros(nu,simuLen);
-for t =1:simuLen
-    xnomTraj(:,t) = x_nom_fcn(times(t));
-    unomTraj(:,t) = u_nom_fcn(times(t));
-end
-figure(1);clf
-hold on;
-
-% visualize the area with disturbances
-visualize_dist_area(Dist_distribution);
-
-plot(xnomTraj(1,:),xnomTraj(2,:),'linewidth',1);
-if trajGen_config.include_obs == 1
-    visualize_obs(trajGen_config.obs,gray_color);
-end    
-sim_config.trajGen_config = trajGen_config;
-figure(2);
-subplot(2,1,1)
-plot(times, xnomTraj(4,:),times, xnomTraj(5,:));
-legend('v_x','v_z');
-subplot(2,1,2)
-plot(times, unomTraj(1,:),times, unomTraj(2,:));
-legend('u_1','u_2');
-
+% change the duration
+duration= 2;
 
 % %% get dist data
 % sample_num = fix(simuLen/100);
@@ -244,97 +165,8 @@ elseif x0xF_config == 9
 end
 % return
 %% Formulate the NLP problem for geodesic computation
-controller.use_generated_code = use_generated_code;
-lambda = controller.lambda;
-%  problem setting for geodesic computation
-D = 2;      % degree of the polynomial
-N = D+6;    % stopping index for the CGL (Chebyshev-Gauss-Lobatto) nodes: #notes N+1
+set_geodesic_prob;
 
-% optimization variables: chebyshev coefficients for geodesics
-% [c_10, c_11,..., c_1D, ..., c_n0, c_n1,..., c_nD]
-
-% --------------------obtain chebyshev pseudospectral numerics-------------
-% --------------------(to be used for computing the integral)--------------
-[s,w_cheby] = clencurt(N); % t is 1 by N+1, with values lying b/t 0 and 1.
-% evaluate the value of the CCM
-W = zeros(n,n,N+1);
-
-% compute Cheby basis at all points
-[T, Tdot] = compute_cheby(N,D,s); % Both T and T_dot are D+1 by N+1
-% for equality constraints
-Aeq = [kron(eye(n),T(:,1)'); kron(eye(n),ones(1,D+1))];
-Aeq = sparse(Aeq);
-
-% --------- formulate and solve the NLP problem using OPTI --------------
-ndec = n*(D+1);
-if controller.use_generated_code == 1
-    costf = @(c) RiemannEnergy1_mex(c,n,D,N,T,Tdot,w_cheby);
-    grad = @(c) energyGradient1_mex(c,n,D,N,T,Tdot,w_cheby);     
-else    
-    costf = @(c) RiemannEnergy(c,n,D,N,T,Tdot,w_cheby,controller.W_fcn);
-    grad = @(c) energyGradient(c,n,D,N,T,Tdot,w_cheby,controller.W_fcn,controller.dW_dxi_fcn); 
-end
-
-geodesic.D = D; geodesic.N = N; geodesic.ndec = ndec;
-geodesic.T = T; geodesic.Tdot = Tdot;
-geodesic.Aeq = Aeq; 
-geodesic.costf = costf;
-geodesic.grad = grad;
-geodesic.w_cheby = w_cheby;
-
-beq = zeros(2*n,1);c0 = zeros(n*(D+1),1);
-% add some bounds to mitigate numerical issues when computing the geodesic
-% lb = -20*ones(size(c0));
-% ub = 20*ones(size(c0));
-lb = -20*ones(n,D+1);
-ub = 20*ones(n,D+1);
-lb(3:4,:) = -5*ones(2,D+1);  % phi and vx
-ub(3:4,:) = 5*ones(2,D+1);   % phi and vx
-lb = lb';lb = lb(:);
-ub = ub';ub= ub(:);
-
-% i = 3;
-% lb((i-1)*(D+1)+(1:D+1),1)= -10*ones(D+1,1);
-% ub((i-1)*(D+1)+(1:D+1),1)= 10*ones(D+1,1);
-% i = 4;
-% lb((i-1)*(D+1)+(1:D+1),1)= -10*ones(D+1,1);
-% ub((i-1)*(D+1)+(1:D+1),1)= 10*ones(D+1,1);
-
-% --------------- re-generate the code is necessary after change of ------
-% controller or geodesic optimization settings: remember to re-generate the
-% m-file functions, e.g., dW_dphi, dW_dvx, etc., first.------------------  
-if controller.use_generated_code 
-    answer = questdlg('Are the generated codes for this particular scenario?','Question for using C-code in simulation','Yes','No','No');
-    switch answer 
-        case 'Yes'
-        case 'No'
-            error('You cannot continue without including the generated codes for this specific scenario!');
-    end
-end
-
-%     [copt1,Erem,exitflag,info] = solve(Opt,c0);
-
-% ---------- for using ipopt solver ---------------------------------------
-% opts_opti = optiset('solver','ipopt','maxiter', 500,'display','iter');  %,,'derivCheck','on'
-% Opt = opti('fun',geodesic.costf,'grad',geodesic.grad,'eq',geodesic.Aeq,beq,...
-%             'bounds',lb,ub,'ndec',geodesic.ndec,'x0',c0,'options',geodesic.opts_opti);
-% geodesic.nlprob = convIpopt(Opt.prob,geodesic.opts_opti); 
-% -------------------------------------------------------------------------
-
-% ----------for using matlab fmincon solver--------------------------------
-opts_opti = optiset('solver','matlab','maxiter',500,'tolrfun',5e-6,'tolafun',5e-6,'display','off','derivCheck','off'); 
-Opt = opti('fun',costf,'grad',grad,'eq',Aeq,beq,'bounds',lb,ub,'ndec',ndec,'x0',c0,'options',opts_opti);
-geodesic.nlprob = convMatlab(Opt.prob,opts_opti); 
-geodesic.nlprob.options = ...
-optimoptions(@fmincon,'Display','off','HessianApproximation','lbfgs',...
-'MaxIterations',opts_opti.maxiter,'SpecifyObjectiveGradient',true,'CheckGradients',false,...
-'OptimalityTolerance',opts_opti.tolrfun,'FunctionTolerance',opts_opti.tolrfun,'FunValCheck','on','StepTolerance',1.0e-8);
-% -------------------------------------------------------------------------
-
-geodesic.opts_opti = opts_opti;
-controller.x_nom_fcn = x_nom_fcn;
-controller.u_nom_fcn = u_nom_fcn;
-controller.geodesic = geodesic;
 controller.w_nom = 0;  % nominal value for disturbances
 
 % simulate
@@ -349,7 +181,7 @@ dist0 = norm(x0);
 ue = ccm_law(0,x0,plant,controller,distLearned,[0 0]',distEst_config.est_errBnd);
 % ue = robust_ccm_law(0,x0,plant,controller,distLearned,[0 0]',distEst_config.est_errBnd);
 x_xhat_u_d_0 = [x0;x0;controller.u_nom_fcn(0);ue(end);[0;0];[0;0]]; % state, input, energy, true disturance,estimated disturbance;
-Klp = [500*ones(5,1);100;100]; % 200 rad/s is for filtering estimated uncertainties. 
+Klp = [500*ones(5,1);30;30]; % The last two elments are for filtering estimated uncertainties. 
 tic;
 
 % ---------------- ode23 is fastest, followed by ode45 ------------------
