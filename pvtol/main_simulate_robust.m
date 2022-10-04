@@ -61,7 +61,7 @@ sim_config.save_sim_rst = 1;        % {1,0}: whether to save simulation results
 sim_config.tight_input_bnd = 0; 
 % {1,0}: whether to tighten the input bnd for trajectory generation
 sim_config.include_tube = 1;        % {1,0}: whether to include a safety tube when plannign the trajectories
-sim_config.step_size = 0.0002;       % step size for simulation with ode1 solver (not used when using a variable-step solver)
+sim_config.step_size = 5e-4;       % step size for simulation with ode1 solver (not used when using a variable-step solver)
 sim_config.delaysteps = delay/sim_config.step_size;
 
 use_generated_code = 1;             % whether to use the generated codes for simulations: using generated codes can accelerate by at least one fold
@@ -116,6 +116,7 @@ end
 % return
 %% Plan or load a nominal trajecotory 
 plan_load_traj;
+duration = 3;
 
 % %% get dist data
 % sample_num = fix(simuLen/100);
@@ -187,7 +188,6 @@ tic;
 % -----------------------------------------------------------------------
 
 % ----------------------- ode1: fixed step ----------------------------
-duration=2;
 times = 0:sim_config.step_size:duration;
 noise = 0*randn(6,length(times));
 % x_xhat_u_d_Traj = ode1(@(t,xu) pvtol_dyn(t,xu,Klp,plant,controller,sim_config,dist_config,distLearned,distEst_config),times,x_xhat_u_d_0); %,ode_opts)
