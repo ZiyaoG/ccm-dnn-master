@@ -155,7 +155,7 @@ if phi0 <=0
     u = u_nom;
 else
     phi1 = gamma_s1_Mx*plant.B;
-    u = u_nom - phi0*phi1'/(phi1*phi1'+1e-12);
+    u = u_nom - phi0*phi1'/(phi1*phi1'+1e-8);
 end
 
 % if phi0 <=0

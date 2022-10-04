@@ -133,7 +133,7 @@ else
     % ------------ updated ---------------------
     if controller.distEstScheme == 0 ||  controller.distEstScheme == 1
         utmp = u_nom+distLearned(x);
-    elseif controller.distEstScheme == 2 
+    elseif controller.distEstScheme == 2 || controller.distEstScheme == 3
         utmp = u_nom;
     end
     phi0 = gamma_s1_Mx*(plant_fx + plant.B*utmp) - ...
