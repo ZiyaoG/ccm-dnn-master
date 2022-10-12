@@ -14,7 +14,7 @@ file_controller = 'ccm_0.8_plim_0.33pi.mat';
 load(file_controller);
 % start and end positions
 x0xF_config = 1; % {1,2,3,4,5,6}
-delay = 0.03; % second. 
+delay = 0.01; % second. 
 
 % ---whether to include dist. estimation and error bound in CCM control----
 %{0,1,2}: 
@@ -121,7 +121,7 @@ end
 plan_load_traj;
 
 % change the duration
-duration= 6;
+% duration= 6;
 % %% get dist data
 % sample_num = fix(simuLen/100);
 % 

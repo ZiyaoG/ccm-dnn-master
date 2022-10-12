@@ -5,3 +5,8 @@ codegen
 /pvtol/w_dist_comp_w_errBnd
 /pvtol/w_perfect_distModel
 /pvtol/*.asv
+/*.pptx
+/pvtol/*.pdf
+/pvtol/*.txt
+/pvtol/ACC/notused/
+/pvtol/theWorkshop/data/

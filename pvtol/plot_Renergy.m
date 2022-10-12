@@ -5,51 +5,43 @@ clf;
 % close all;
 figure(1)
 % Task1: 00_810
-file1 = load('theSwedenWorkshop/data/_dtx_DECCM_ode1_constantintensity_03_03_00_88.mat');
+file1 = load('ACC/RCCM_no_learning_1ms_0.03s_delay_00_810.mat');
+% file1 = load('ACC/DECCM_no_learning_1ms_0.03s_delay_00_810.mat');
+
 R_energy_ccm_no = file1.energyTraj;
 times1 = file1.times;
-E1 = plot(times1,R_energy_ccm_no,'r-','Linewidth',1);
+E1 = plot(times1,R_energy_ccm_no,'b-.','Linewidth',1);
 hold on
 
 
-file2 = load('theSwedenWorkshop/data/_dtx_CCM_ode1_constantintensity_03_03_00_88.mat');
+file2 = load('ACC/RCCM_perfect_learning_1ms_0.03s_delay_00_810.mat');
+% file2 = load('ACC/DECCM_perfect_learning_1ms_0.03s_delay_00_810.mat');
+
 R_energy_deccm_no = file2.energyTraj;
 times2 = file2.times;
-E2 = plot(times2,R_energy_deccm_no,'m:','Linewidth',1);
+E2 = plot(times2,R_energy_deccm_no,'k:','Linewidth',1.5);
 
-% file3 = load('simulation_results/sim_ccm_T_0.0001_lam_0.8_w_dist_1_with_poor_Adam_bound0.1_00_810_w_obs.mat');
-file3 = load('theSwedenWorkshop/data/_dtx_adaptiveCCM_ode1_constantintensity_03_03_00_88.mat');
+file3 = load('ACC/DECCM_no_learning_1ms_0.03s_delay_00_810.mat');
 R_energy_ccm_poor = file3.energyTraj;
 times3 = file3.times;
-E3 = plot(times3,R_energy_ccm_poor,'b-.','Linewidth',1);
+E3 = plot(times3,R_energy_ccm_poor,'m-','Linewidth',1.5);
 
-% file4 = load('simulation_results/sim_de_ccm_T_0.0001_lam_0.8_w_dist_1_with_poor_Adam_bound0.1_00_810_w_obs (1).mat');
-file4 = load('theSwedenWorkshop/data/_dtx_adaptiveCCM_ode23_constantintensity_03_03_00_88_gain100_tVec.mat');
+file4 = load('ACC/DECCM_perfect_learning_1ms_0.03s_delay_00_810.mat');
 R_energy_deccm_poor = file4.energyTraj;
-% times4 = file4.times;
-E4 = plot(file4.tVec,R_energy_deccm_poor,'g-.','Linewidth',1);
-% 
-% file5 = load('simulation_results/sim_ccm_T_0.0001_lam_0.8_w_dist_1_with_perfect_Adam_bound0.1_00_810_w_obs.mat');
-% R_energy_ccm_perfect = file5.energyTraj;
-% times5 = file5.times;
-% E5 = plot(times5,R_energy_ccm_perfect,'r:','Linewidth',2.5);
-% 
-% file6 = load('simulation_results/sim_de_ccm_T_0.0001_lam_0.8_w_dist_1_with_perfect_Adam_bound0.1_00_810_w_obs.mat');
-% R_energy_deccm_perfect = file6.energyTraj;
-% times6 = file6.times;
-% E6 = plot(times6,R_energy_deccm_perfect,'b:','Linewidth',2);
+times4 = file4.times;
+E4 = plot(times4,R_energy_deccm_poor,'r-','Linewidth',2);0
 
 
-
-axis square
+% axis square
 xlabel('Time (s)','interpreter','latex')
 ylabel('Energy','interpreter','latex')
 % legend([E1,E2,E3,E4,E5,E6],{'CCM: no L', 'DE-CCM: no L', 'CCM: moderate L', 'DE-CCM: moderate L', 'CCM: good L', 'DE-CCM: good L'},'NumColumns',2,'Location','north','Orientation','horizontal');
-legend([E1,E2,E3,E4],{'DECCM', 'CCM','AdCCM($\Gamma=10$)','AdCCM($\Gamma=100$)'},'NumColumns',2,'Location','north','Orientation','horizontal','interpreter','latex');
+% legend([E1,E2,E3,E4],{'RCCM - no learning', 'RCCM - good learning','DE-CCM - no learning','DE-CCM - good learning'},'NumColumns',2,'Location','north','Orientation','horizontal','interpreter','latex');
+% legend([E1,E2],{'DECCM - no learning', 'DECCM - good learning'},'NumColumns',2,'Location','north','Orientation','horizontal','interpreter','latex');
 
-xlim([0 10]);
-ylim([0 35]);
-goodplot([5 5]);
+xlim([6 6.5]);
+% ylim([0 35]);
+goodplot([6.3 3]);
 
 %%
 % axes('position',[.3 .45 .5 .25])
@@ -72,4 +64,4 @@ goodplot([5 5]);
 % axis tight
 
 
-% print('theSwedenWorkshop/Renergy_deccm_ad_ccm.pdf', '-painters', '-dpdf', '-r150');
+print('ACC/Renergy_deccm_Rccm_30msdelay_zoomin.pdf', '-painters', '-dpdf', '-r150');
